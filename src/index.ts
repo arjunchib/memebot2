@@ -19,7 +19,7 @@ client.once("ready", async () => {
 });
 
 client.on("interactionCreate", async (interaction) => {
-  if (interaction.isCommand()) {
+  if (interaction.isApplicationCommand()) {
     await runners[interaction.commandName](interaction);
   }
 });

@@ -1,20 +1,22 @@
-import { CommandInteraction } from "discord.js";
-import { ApplicationCommandData } from "discord.js";
+import {
+  MessageActionRow,
+  ButtonInteraction,
+  BaseCommandInteraction,
+  MessageButton,
+  CommandInteraction,
+  ApplicationCommandData,
+} from "discord.js";
 import {
   joinVoiceChannel,
   createAudioPlayer,
-  getVoiceConnection,
   createAudioResource,
   StreamType,
   AudioPlayerStatus,
-  NoSubscriberBehavior,
 } from "@discordjs/voice";
 import { primaryGuildId } from "../../config.js";
 import ytdl from "ytdl-core";
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import { Duplex } from "stream";
-import { MessageActionRow } from "discord.js";
-import { MessageButton } from "discord.js";
 
 const ffmpeg = createFFmpeg({ log: false });
 
@@ -40,10 +42,28 @@ export const command: ApplicationCommandData = {
       type: 3,
       required: true,
     },
+    {
+      name: "name",
+      description: "Name",
+      type: 3,
+      required: true,
+    },
   ],
 };
 
-export async function run(interaction: CommandInteraction) {
+export async function run(interaction: BaseCommandInteraction) {
+  if (interaction.isCommand()) {
+    await runCommand(interaction);
+  } else if (interaction.isButton()) {
+    await runButton(interaction);
+  }
+}
+
+function userFile(interaction: BaseCommandInteraction) {
+  return `${interaction.user.id}.webm`;
+}
+
+async function runCommand(interaction: CommandInteraction) {
   if (!("voice" in interaction.member) || !interaction.member.voice.channel) {
     return await interaction.reply("Must be connected to voice channel");
   }
@@ -66,10 +86,11 @@ export async function run(interaction: CommandInteraction) {
     quality: "highestaudio",
     filter: (format) => format.codecs === "opus" && format.container === "webm",
   });
+  const outFile = userFile(interaction);
   ffmpeg.FS("writeFile", "meme.webm", await fetchFile(format.url));
-  await ffmpeg.run("-ss", start, "-to", end, "-i", "meme.webm", "temp.webm");
-  let stream = new Duplex();
-  stream.push(ffmpeg.FS("readFile", "temp.webm"));
+  await ffmpeg.run("-ss", start, "-to", end, "-i", "meme.webm", outFile);
+  const stream = new Duplex();
+  stream.push(ffmpeg.FS("readFile", outFile));
   stream.push(null);
   const resource = createAudioResource(stream, {
     inputType: StreamType.WebmOpus,
@@ -92,17 +113,21 @@ export async function run(interaction: CommandInteraction) {
 
   const row = new MessageActionRow().addComponents(
     new MessageButton()
-      .setCustomId("keep")
-      .setLabel("Keep")
-      .setStyle("PRIMARY"),
+      .setCustomId("save")
+      .setLabel("Save")
+      .setStyle("SUCCESS"),
     new MessageButton()
-      .setCustomId("delete")
-      .setLabel("Delete")
-      .setStyle("DANGER")
+      .setCustomId("skip")
+      .setLabel("Skip")
+      .setStyle("SECONDARY")
   );
   await interaction.reply({
-    content: "Do you want to keep this meme?",
+    content: "Do you want to save this meme?",
     components: [row],
     ephemeral: true,
   });
+}
+
+async function runButton(interaction: ButtonInteraction) {
+  // ffmpeg.FS("readFile", outFile);
 }
