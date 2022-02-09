@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "migrate": "pnpm build:db && node --enable-source-maps dist/migrator.js",
-    "dev": "pnpm build && node --enable-source-maps dist/src/index.js",
+    "dev": "pnpm build && node --enable-source-maps dist/index.js",
     "build": "esbuild src/index.ts --outdir=dist --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
     "build:db": "esbuild src/db/migrator.ts --outdir=dist --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*' && esbuild src/db/migrations/*.ts --outdir=dist/migrations --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
     "test": "echo \"Error: no test specified\" && exit 1"

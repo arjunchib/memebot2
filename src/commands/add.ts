@@ -17,8 +17,11 @@ import { primaryGuildId } from "../../config.js";
 import ytdl from "ytdl-core";
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import { Duplex } from "stream";
+import { Meme } from "../models/meme.js";
+import fs from "fs/promises";
 
 const ffmpeg = createFFmpeg({ log: false });
+const memes = new Map<string, Meme>();
 
 export const command: ApplicationCommandData = {
   name: "add",
@@ -52,6 +55,7 @@ export const command: ApplicationCommandData = {
 };
 
 export async function run(interaction: BaseCommandInteraction) {
+  console.log(interaction);
   if (interaction.isCommand()) {
     await runCommand(interaction);
   } else if (interaction.isButton()) {
@@ -65,7 +69,10 @@ function userFile(interaction: BaseCommandInteraction) {
 
 async function runCommand(interaction: CommandInteraction) {
   if (!("voice" in interaction.member) || !interaction.member.voice.channel) {
-    return await interaction.reply("Must be connected to voice channel");
+    return await interaction.reply({
+      content: "Must be connected to voice channel",
+      ephemeral: true,
+    });
   }
 
   if (!ffmpeg.isLoaded()) {
@@ -75,6 +82,7 @@ async function runCommand(interaction: CommandInteraction) {
   const url = interaction.options.getString("url");
   const start = interaction.options.getString("start");
   const end = interaction.options.getString("end");
+  const name = interaction.options.getString("name");
 
   const player = createAudioPlayer();
   player.on("error", (error) => {
@@ -111,6 +119,8 @@ async function runCommand(interaction: CommandInteraction) {
     connection.destroy();
   });
 
+  memes.set(interaction.user.id, Meme.build({ name }));
+
   const row = new MessageActionRow().addComponents(
     new MessageButton()
       .setCustomId("save")
@@ -121,6 +131,7 @@ async function runCommand(interaction: CommandInteraction) {
       .setLabel("Skip")
       .setStyle("SECONDARY")
   );
+
   await interaction.reply({
     content: "Do you want to save this meme?",
     components: [row],
@@ -129,5 +140,12 @@ async function runCommand(interaction: CommandInteraction) {
 }
 
 async function runButton(interaction: ButtonInteraction) {
-  // ffmpeg.FS("readFile", outFile);
+  if (interaction.customId === "save") {
+    const meme = memes.get(interaction.user.id);
+    await meme?.save();
+    await interaction.update({ content: "Added meme!", components: [] });
+  } else {
+    memes.delete(interaction.user.id);
+    await interaction.update({ content: "Skipped!", components: [] });
+  }
 }

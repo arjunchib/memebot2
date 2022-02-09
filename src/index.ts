@@ -1,4 +1,4 @@
-import { Client, Intents } from "discord.js";
+import { Client, Intents, Message } from "discord.js";
 import { Sequelize } from "sequelize";
 import { token, primaryGuildId } from "../config.js";
 import * as commands from "./commands";
@@ -9,17 +9,17 @@ const sequelize = new Sequelize({
   storage: "memebot.sqlite",
 });
 
-const umzug = new Umzug({
-  migrations: { glob: "migrations/*.js" },
-  context: sequelize.getQueryInterface(),
-  storage: new SequelizeStorage({ sequelize }),
-  logger: console,
-});
+// const umzug = new Umzug({
+//   migrations: { glob: "migrations/*.js" },
+//   context: sequelize.getQueryInterface(),
+//   storage: new SequelizeStorage({ sequelize }),
+//   logger: console,
+// });
 
-// Checks migrations and run them if they are not already applied. To keep
-// track of the executed migrations, a table (and sequelize model) called SequelizeMeta
-// will be automatically created (if it doesn't exist already) and parsed.
-await umzug.up();
+// // Checks migrations and run them if they are not already applied. To keep
+// // track of the executed migrations, a table (and sequelize model) called SequelizeMeta
+// // will be automatically created (if it doesn't exist already) and parsed.
+// await umzug.up();
 
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES],
@@ -40,6 +40,10 @@ client.once("ready", async () => {
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isApplicationCommand()) {
     await runners[interaction.commandName](interaction);
+  } else if (interaction.isMessageComponent()) {
+    if (interaction.message instanceof Message) {
+      await runners[interaction.message.interaction.commandName](interaction);
+    }
   }
 });
 
