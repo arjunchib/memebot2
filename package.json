@@ -5,8 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "pnpm build && node --enable-source-maps dist/index.js",
-    "build": "esbuild src/index.ts --outdir=dist --format=esm  --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
+    "migrate": "pnpm build:db && node --enable-source-maps dist/migrator.js",
+    "dev": "pnpm build && node --enable-source-maps dist/src/index.js",
+    "build": "esbuild src/index.ts --outdir=dist --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
+    "build:db": "esbuild src/db/migrator.ts --outdir=dist --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*' && esbuild src/db/migrations/*.ts --outdir=dist/migrations --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Arjun Chib",
@@ -19,7 +21,10 @@
     "discord.js": "^13.6.0",
     "esbuild": "^0.14.18",
     "prism-media": "^1.3.2",
+    "sequelize": "^6.16.0",
     "sodium": "^3.0.2",
+    "sqlite3": "^5.0.2",
+    "umzug": "^3.0.0",
     "ytdl-core": "^4.10.1"
   }
 }
