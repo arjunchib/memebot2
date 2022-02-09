@@ -1,15 +1,25 @@
-import { DataTypes, Model } from "sequelize";
+import {
+  DataTypes,
+  Model,
+  InferAttributes,
+  InferCreationAttributes,
+} from "sequelize";
 import { sequelize } from "../db";
 
-export class Meme extends Model {}
+export class Meme extends Model<
+  InferAttributes<Meme>,
+  InferCreationAttributes<Meme>
+> {
+  declare id: string;
+  declare name: string;
+}
 
 Meme.init(
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       primaryKey: true,
-      autoIncrement: true,
     },
     name: {
       type: DataTypes.STRING,

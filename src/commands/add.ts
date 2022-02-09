@@ -5,6 +5,7 @@ import {
   MessageButton,
   CommandInteraction,
   ApplicationCommandData,
+  Interaction,
 } from "discord.js";
 import {
   joinVoiceChannel,
@@ -19,6 +20,7 @@ import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import { Duplex } from "stream";
 import { Meme } from "../models/meme.js";
 import fs from "fs/promises";
+import { v4 as uuidv4 } from "uuid";
 
 const ffmpeg = createFFmpeg({ log: false });
 const memes = new Map<string, Meme>();
@@ -63,7 +65,7 @@ export async function run(interaction: BaseCommandInteraction) {
   }
 }
 
-function userFile(interaction: BaseCommandInteraction) {
+function userFile(interaction: Interaction) {
   return `${interaction.user.id}.webm`;
 }
 
@@ -142,6 +144,12 @@ async function runCommand(interaction: CommandInteraction) {
 async function runButton(interaction: ButtonInteraction) {
   if (interaction.customId === "save") {
     const meme = memes.get(interaction.user.id);
+    const id = uuidv4();
+    await fs.writeFile(
+      `./audio/${id}.webm`,
+      ffmpeg.FS("readFile", userFile(interaction))
+    );
+    meme.id = id;
     await meme?.save();
     await interaction.update({ content: "Added meme!", components: [] });
   } else {

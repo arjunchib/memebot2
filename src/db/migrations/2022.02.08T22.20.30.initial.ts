@@ -6,10 +6,9 @@ export const up: MigrationFn<QueryInterface> = async ({
 }) => {
   await queryInterface.createTable("memes", {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       primaryKey: true,
-      autoIncrement: true,
     },
     name: {
       type: DataTypes.STRING,
