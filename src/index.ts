@@ -1,13 +1,7 @@
 import { Client, Intents, Message } from "discord.js";
-import { Sequelize } from "sequelize";
 import { token, primaryGuildId } from "../config.js";
 import * as commands from "./commands";
-import { Umzug, SequelizeStorage } from "umzug";
-
-const sequelize = new Sequelize({
-  dialect: "sqlite",
-  storage: "memebot.sqlite",
-});
+// import { Umzug, SequelizeStorage } from "umzug";
 
 // const umzug = new Umzug({
 //   migrations: { glob: "migrations/*.js" },

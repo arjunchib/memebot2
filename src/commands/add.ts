@@ -21,6 +21,7 @@ import { Duplex } from "stream";
 import { Meme } from "../models/meme.js";
 import fs from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
+import { Command } from "../models/command.js";
 
 const ffmpeg = createFFmpeg({ log: false });
 const memes = new Map<string, Meme>();
@@ -57,7 +58,9 @@ export const command: ApplicationCommandData = {
 };
 
 export async function run(interaction: BaseCommandInteraction) {
-  console.log(interaction);
+  if (!ffmpeg.isLoaded()) {
+    await ffmpeg.load();
+  }
   if (interaction.isCommand()) {
     await runCommand(interaction);
   } else if (interaction.isButton()) {
@@ -75,10 +78,6 @@ async function runCommand(interaction: CommandInteraction) {
       content: "Must be connected to voice channel",
       ephemeral: true,
     });
-  }
-
-  if (!ffmpeg.isLoaded()) {
-    await ffmpeg.load();
   }
 
   const url = interaction.options.getString("url");
@@ -151,7 +150,10 @@ async function runButton(interaction: ButtonInteraction) {
     );
     meme.id = id;
     await meme?.save();
-    await interaction.update({ content: "Added meme!", components: [] });
+    const name = meme.name;
+    await meme.createCommand({ name });
+    await interaction.deleteReply();
+    await interaction.reply(`Added *${name}*`);
   } else {
     memes.delete(interaction.user.id);
     await interaction.update({ content: "Skipped!", components: [] });

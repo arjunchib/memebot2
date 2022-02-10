@@ -8,6 +8,7 @@ import {
 } from "@discordjs/voice";
 import fs from "fs";
 import { Meme } from "../models/meme";
+import { Command } from "../models/command";
 
 export const command: ApplicationCommandData = {
   name: "play",
@@ -30,9 +31,11 @@ export async function run(interaction: CommandInteraction) {
     });
   }
 
-  const name = interaction.options.getString("name");
+  const name = interaction.options.getString("meme");
 
-  const meme = await Meme.findOne({ where: { name } });
+  const command = await Command.findOne({ where: { name }, include: Meme });
+  console.log(JSON.stringify(command, null, 2));
+  const meme = command.Meme;
 
   const player = createAudioPlayer();
 
