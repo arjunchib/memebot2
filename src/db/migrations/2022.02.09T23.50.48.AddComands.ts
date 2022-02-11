@@ -16,7 +16,7 @@ export const up: MigrationFn<QueryInterface> = async ({
         model: "memes",
         key: "id",
       },
-      onDelete: "SET NULL",
+      onDelete: "CASCADE",
       onUpdate: "CASCADE",
     },
     createdAt: {
