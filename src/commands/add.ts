@@ -21,7 +21,6 @@ import { Duplex } from "stream";
 import { Meme } from "../models/meme.js";
 import fs from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
-import { Command } from "../models/command.js";
 
 const ffmpeg = createFFmpeg({ log: false });
 const memes = new Map<string, Meme>();

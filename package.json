@@ -5,10 +5,11 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "seed": "pnpm build:db && node --enable-source-maps dist/seed.js",
     "migrate": "pnpm build:db && node --enable-source-maps dist/migrator.js",
     "dev": "pnpm build && node --enable-source-maps dist/index.js",
     "build": "esbuild src/index.ts --outdir=dist --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
-    "build:db": "esbuild src/db/migrator.ts --outdir=dist --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*' && esbuild src/db/migrations/*.ts --outdir=dist/migrations --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
+    "build:db": "esbuild src/db/migrator.ts src/db/seed.ts --outdir=dist --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*' && esbuild src/db/migrations/*.ts --outdir=dist/migrations --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Arjun Chib",
@@ -20,6 +21,7 @@
     "@ffmpeg/ffmpeg": "^0.10.1",
     "@types/node": "^17.0.16",
     "@types/validator": "^13.7.1",
+    "axios": "^0.25.0",
     "discord.js": "^13.6.0",
     "esbuild": "^0.14.18",
     "prism-media": "^1.3.2",
