@@ -36,22 +36,20 @@ export const command: ApplicationCommandData = {
       required: true,
     },
     {
-      name: "start",
-      description: "Start time",
+      name: "name",
+      description: "Display name",
       type: 3,
       required: true,
+    },
+    {
+      name: "start",
+      description: "Start time (from beginning if omitted)",
+      type: 3,
     },
     {
       name: "end",
-      description: "End time",
+      description: "End time (to end if omitted)",
       type: 3,
-      required: true,
-    },
-    {
-      name: "name",
-      description: "Name",
-      type: 3,
-      required: true,
     },
   ],
 };
@@ -80,9 +78,18 @@ async function runCommand(interaction: CommandInteraction) {
   }
 
   const url = interaction.options.getString("url");
+  const name = interaction.options.getString("name");
   const start = interaction.options.getString("start");
   const end = interaction.options.getString("end");
-  const name = interaction.options.getString("name");
+
+  if (await Meme.findOne({ where: { name } })) {
+    return await interaction.reply({
+      content: "A meme with this name already exists!",
+      ephemeral: true,
+    });
+  }
+
+  await interaction.deferReply();
 
   const player = createAudioPlayer();
   player.on("error", (error) => {
@@ -96,7 +103,11 @@ async function runCommand(interaction: CommandInteraction) {
   });
   const outFile = userFile(interaction);
   ffmpeg.FS("writeFile", "meme.webm", await fetchFile(format.url));
-  await ffmpeg.run("-ss", start, "-to", end, "-i", "meme.webm", outFile);
+  const cmd: string[] = [];
+  if (start) cmd.push("-ss", start);
+  if (end) cmd.push("-to", end);
+  cmd.push("-i", "meme.webm", outFile);
+  await ffmpeg.run(...cmd);
   const stream = new Duplex();
   stream.push(ffmpeg.FS("readFile", outFile));
   stream.push(null);
@@ -132,10 +143,9 @@ async function runCommand(interaction: CommandInteraction) {
       .setStyle("SECONDARY")
   );
 
-  await interaction.reply({
+  await interaction.editReply({
     content: "Do you want to save this meme?",
     components: [row],
-    ephemeral: true,
   });
 }
 
@@ -151,8 +161,7 @@ async function runButton(interaction: ButtonInteraction) {
     await meme?.save();
     const name = meme.name;
     await meme.createCommand({ name });
-    await interaction.deleteReply();
-    await interaction.reply(`Added *${name}*`);
+    await interaction.update({ content: `Added *${name}*`, components: [] });
   } else {
     memes.delete(interaction.user.id);
     await interaction.update({ content: "Skipped!", components: [] });

@@ -32,12 +32,16 @@ client.once("ready", async () => {
 });
 
 client.on("interactionCreate", async (interaction) => {
-  if (interaction.isApplicationCommand() || interaction.isAutocomplete()) {
-    await runners[interaction.commandName](interaction);
-  } else if (interaction.isMessageComponent()) {
-    if (interaction.message instanceof Message) {
-      await runners[interaction.message.interaction.commandName](interaction);
+  try {
+    if (interaction.isApplicationCommand() || interaction.isAutocomplete()) {
+      await runners[interaction.commandName](interaction);
+    } else if (interaction.isMessageComponent()) {
+      if (interaction.message instanceof Message) {
+        await runners[interaction.message.interaction.commandName](interaction);
+      }
     }
+  } catch (e) {
+    console.error(e);
   }
 });
 
