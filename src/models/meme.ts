@@ -6,6 +6,7 @@ import {
   HasManyCreateAssociationMixin,
   HasManyRemoveAssociationsMixin,
   HasManyGetAssociationsMixin,
+  NonAttribute,
 } from "sequelize";
 import { sequelize } from "../db";
 import { Command } from "./command";
@@ -17,6 +18,9 @@ export class Meme extends Model<
 > {
   declare id: string;
   declare name: string;
+
+  declare Commands: NonAttribute<Command[]>;
+  declare Tags: NonAttribute<Tag[]>;
 
   declare createCommand: HasManyCreateAssociationMixin<Command, "name">;
   declare getCommands: HasManyGetAssociationsMixin<Command>;
