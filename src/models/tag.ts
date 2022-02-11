@@ -3,7 +3,7 @@ import {
   Model,
   InferAttributes,
   InferCreationAttributes,
-  NonAttribute,
+  HasManyCountAssociationsMixin,
 } from "sequelize";
 import { sequelize } from "../db";
 
@@ -12,7 +12,7 @@ export class Tag extends Model<
   InferCreationAttributes<Tag>
 > {
   declare name: string;
-  // declare Meme?: NonAttribute<Meme>;
+  declare countMemes: HasManyCountAssociationsMixin;
 }
 
 Tag.init(

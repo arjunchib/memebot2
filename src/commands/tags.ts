@@ -48,14 +48,21 @@ export async function run(interaction: CommandInteraction) {
 
   if (sub === "add") {
     const tags = await Promise.all(
-      names.map((n) => meme.createTag({ name: n }))
+      names.map((n) => meme.createTag({ name: n }, { ignoreDuplicates: true }))
     );
     await interaction.reply(`Added *${tags.map((t) => t.name).join(", ")}*`);
   } else if (sub === "remove") {
     const tags = await meme.getTags({
       where: { name: names },
     });
-    await Promise.all(tags.map((t) => t.destroy()));
-    await interaction.reply(`Deleted *${tags.map((t) => t.name).join(", ")}*`);
+    await meme.removeTags(tags);
+    await Promise.all(
+      tags.map(async (t) => {
+        if ((await t.countMemes()) <= 0) {
+          t.destroy();
+        }
+      })
+    );
+    await interaction.reply(`Removed *${tags.map((t) => t.name).join(", ")}*`);
   }
 }

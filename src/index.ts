@@ -32,7 +32,7 @@ client.once("ready", async () => {
 });
 
 client.on("interactionCreate", async (interaction) => {
-  if (interaction.isApplicationCommand()) {
+  if (interaction.isApplicationCommand() || interaction.isAutocomplete()) {
     await runners[interaction.commandName](interaction);
   } else if (interaction.isMessageComponent()) {
     if (interaction.message instanceof Message) {

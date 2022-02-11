@@ -4,7 +4,7 @@ import {
   InferAttributes,
   InferCreationAttributes,
   HasManyCreateAssociationMixin,
-  HasManyAddAssociationsMixin,
+  HasManyRemoveAssociationsMixin,
   HasManyGetAssociationsMixin,
 } from "sequelize";
 import { sequelize } from "../db";
@@ -23,6 +23,7 @@ export class Meme extends Model<
 
   declare getTags: HasManyGetAssociationsMixin<Tag>;
   declare createTag: HasManyCreateAssociationMixin<Tag, "name">;
+  declare removeTags: HasManyRemoveAssociationsMixin<Tag, "name">;
 }
 
 Meme.init(
