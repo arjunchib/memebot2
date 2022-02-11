@@ -17,68 +17,51 @@ import { Command } from "../models/command";
 import { Op } from "sequelize";
 
 export const command: ApplicationCommandData = {
-  name: "play",
-  description: "Play a meme",
+  name: "rename",
+  description: "Change the display name",
   options: [
     {
       name: "meme",
-      description: "Command",
+      description: "Name",
       type: 3,
       required: true,
       autocomplete: true,
+    },
+    {
+      name: "name",
+      description: "New display name",
+      type: 3,
+      required: true,
     },
   ],
 };
 
 export async function run(interaction: Interaction) {
   if (interaction.isCommand()) {
-    await play(interaction);
+    await rename(interaction);
   } else if (interaction.isAutocomplete()) {
     await autocomplete(interaction);
   }
 }
 
-async function play(interaction: CommandInteraction) {
-  if (!("voice" in interaction.member) || !interaction.member.voice.channel) {
+async function rename(interaction: CommandInteraction) {
+  const name = interaction.options.getString("meme");
+  const newName = interaction.options.getString("name").trim();
+
+  if (await Meme.findOne({ where: { name: newName } })) {
     return await interaction.reply({
-      content: "Must be connected to voice channel",
+      content: "A meme with this name already exists!",
       ephemeral: true,
     });
   }
 
-  const name = interaction.options.getString("meme");
-
   const command = await Command.findOne({ where: { name }, include: Meme });
-  console.log(JSON.stringify(command, null, 2));
   const meme = command.Meme;
+  const oldName = meme.name;
+  meme.name = newName;
+  await meme.save();
 
-  const player = createAudioPlayer();
-
-  player.on("error", (error) => {
-    console.error("Error:", error.message, "with track", error.resource);
-  });
-
-  const stream = fs.createReadStream(`./audio/${meme.id}.webm`);
-  const resource = createAudioResource(stream, {
-    inputType: StreamType.WebmOpus,
-  });
-
-  const channel = interaction.member.voice.channel;
-  const connection = joinVoiceChannel({
-    channelId: channel.id,
-    guildId: interaction.member.guild.id,
-    adapterCreator: channel.guild.voiceAdapterCreator,
-  });
-
-  const subscription = connection.subscribe(player);
-  player.play(resource);
-
-  player.on(AudioPlayerStatus.Idle, () => {
-    subscription.unsubscribe();
-    connection.destroy();
-  });
-
-  await interaction.reply(`Playing *${name}*`);
+  await interaction.reply(`Updated *${oldName}* to *${newName}*`);
 }
 
 async function autocomplete(interaction: AutocompleteInteraction) {
