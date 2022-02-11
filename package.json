@@ -5,12 +5,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "seed": "pnpm build:db && node --enable-source-maps dist/seed.js",
-    "migrate": "pnpm build:db && node --enable-source-maps dist/migrator.js",
-    "dev": "pnpm build && node --enable-source-maps dist/index.js",
-    "build": "esbuild src/index.ts --outdir=dist --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
-    "build:db": "esbuild src/db/migrator.ts src/db/seed.ts --outdir=dist --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*' && esbuild src/db/migrations/*.ts --outdir=dist/migrations --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "seed": "pnpm build:scripts && node --enable-source-maps dist/scripts/seed.js",
+    "migrate": "pnpm build:scripts && pnpm build:db && node --enable-source-maps dist/scripts/migrator.js",
+    "dev": "pnpm build:bot && node --enable-source-maps dist/bot.js",
+    "build:bot": "esbuild src/index.ts --outfile=dist/bot.js --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
+    "build:db": "esbuild src/db/migrations/*.ts --outdir=dist/migrations --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
+    "build:scripts": "esbuild scripts/*.ts --outdir=dist/scripts --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'"
   },
   "author": "Arjun Chib",
   "license": "ISC",

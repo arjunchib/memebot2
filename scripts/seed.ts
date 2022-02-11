@@ -2,11 +2,11 @@ import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import axios from "axios";
 import { Duplex } from "stream";
 import { v4 as uuidv4 } from "uuid";
-import { Command } from "../models/command";
-import { Meme } from "../models/meme";
-import { Tag } from "../models/tag";
+import { Command } from "../src/models/command";
+import { Meme } from "../src/models/meme";
+import { Tag } from "../src/models/tag";
 import fs from "fs/promises";
-import { sequelize } from ".";
+import { sequelize } from "../src/db";
 
 function dedupe(arr: any[]): any[] {
   return [...new Set(arr)];
