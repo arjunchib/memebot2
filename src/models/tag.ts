@@ -3,9 +3,12 @@ import {
   Model,
   InferAttributes,
   InferCreationAttributes,
+  NonAttribute,
   HasManyCountAssociationsMixin,
+  HasManyGetAssociationsMixin,
 } from "sequelize";
 import { sequelize } from "../db";
+import type { Meme } from "./meme";
 
 export class Tag extends Model<
   InferAttributes<Tag>,
@@ -13,6 +16,8 @@ export class Tag extends Model<
 > {
   declare name: string;
   declare countMemes: HasManyCountAssociationsMixin;
+  declare getMemes: HasManyGetAssociationsMixin<Meme>;
+  declare Memes: NonAttribute<Meme[]>;
 }
 
 Tag.init(
