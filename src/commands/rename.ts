@@ -1,20 +1,11 @@
 import {
   ApplicationCommandData,
-  AutocompleteInteraction,
   CommandInteraction,
   Interaction,
 } from "discord.js";
-import {
-  joinVoiceChannel,
-  createAudioResource,
-  StreamType,
-  AudioPlayerStatus,
-  createAudioPlayer,
-} from "@discordjs/voice";
-import fs from "fs";
 import { Meme } from "../models/meme";
 import { Command } from "../models/command";
-import { Op } from "sequelize";
+import { autocomplete, getCommandChoices } from "../autocomplete";
 
 export const command: ApplicationCommandData = {
   name: "rename",
@@ -40,7 +31,7 @@ export async function run(interaction: Interaction) {
   if (interaction.isCommand()) {
     await rename(interaction);
   } else if (interaction.isAutocomplete()) {
-    await autocomplete(interaction);
+    await autocomplete(interaction, getCommandChoices);
   }
 }
 
@@ -62,16 +53,4 @@ async function rename(interaction: CommandInteraction) {
   await meme.save();
 
   await interaction.reply(`Updated *${oldName}* to *${newName}*`);
-}
-
-async function autocomplete(interaction: AutocompleteInteraction) {
-  const value = interaction.options.getFocused().toString();
-  const commands = await Command.findAll({
-    where: { name: { [Op.startsWith]: value } },
-    limit: 25,
-    attributes: ["name"],
-  });
-  await interaction.respond(
-    commands.map((c) => ({ name: c.name, value: c.name }))
-  );
 }

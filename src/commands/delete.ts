@@ -1,18 +1,14 @@
 import {
   ApplicationCommandData,
-  AutocompleteInteraction,
   ButtonInteraction,
   CommandInteraction,
   Interaction,
   MessageActionRow,
   MessageButton,
 } from "discord.js";
-import { Meme } from "../models/meme";
-import { Command } from "../models/command";
-import { Op } from "sequelize";
+import { Meme, Tag, Command } from "../models";
+import { autocomplete, getCommandChoices } from "../autocomplete";
 import fs from "fs/promises";
-import { commands } from ".";
-import { Tag } from "../models";
 
 export const command: ApplicationCommandData = {
   name: "delete",
@@ -34,7 +30,7 @@ export async function run(interaction: Interaction) {
   if (interaction.isCommand()) {
     await destroy(interaction);
   } else if (interaction.isAutocomplete()) {
-    await autocomplete(interaction);
+    await autocomplete(interaction, getCommandChoices);
   } else if (interaction.isButton()) {
     await button(interaction);
   }
@@ -94,16 +90,4 @@ async function button(interaction: ButtonInteraction) {
   } else {
     await interaction.update({ content: "Skipped!", components: [] });
   }
-}
-
-async function autocomplete(interaction: AutocompleteInteraction) {
-  const value = interaction.options.getFocused().toString();
-  const commands = await Command.findAll({
-    where: { name: { [Op.startsWith]: value } },
-    limit: 25,
-    attributes: ["name"],
-  });
-  await interaction.respond(
-    commands.map((c) => ({ name: c.name, value: c.name }))
-  );
 }
