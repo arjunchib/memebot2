@@ -7,20 +7,13 @@ import {
   ApplicationCommandData,
   Interaction,
 } from "discord.js";
-import {
-  joinVoiceChannel,
-  createAudioPlayer,
-  createAudioResource,
-  StreamType,
-  AudioPlayerStatus,
-} from "@discordjs/voice";
-import { primaryGuildId } from "../../config.js";
 import ytdl from "ytdl-core";
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import { Duplex } from "stream";
 import { Meme } from "../models/meme.js";
 import fs from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
+import { playStream } from "../play-stream.js";
 
 const ffmpeg = createFFmpeg({ log: false });
 const memes = new Map<string, Meme>();
@@ -91,11 +84,6 @@ async function runCommand(interaction: CommandInteraction) {
 
   await interaction.deferReply();
 
-  const player = createAudioPlayer();
-  player.on("error", (error) => {
-    console.error("Error:", error.message, "with track", error.resource);
-  });
-
   let info = await ytdl.getInfo(url);
   const format = ytdl.chooseFormat(info.formats, {
     quality: "highestaudio",
@@ -111,25 +99,8 @@ async function runCommand(interaction: CommandInteraction) {
   const stream = new Duplex();
   stream.push(ffmpeg.FS("readFile", outFile));
   stream.push(null);
-  const resource = createAudioResource(stream, {
-    inputType: StreamType.WebmOpus,
-  });
 
-  const channel = interaction.member.voice.channel;
-  const connection = joinVoiceChannel({
-    channelId: channel.id,
-    guildId: primaryGuildId,
-    adapterCreator: channel.guild.voiceAdapterCreator,
-  });
-
-  const subscription = connection.subscribe(player);
-  player.play(resource);
-
-  player.on(AudioPlayerStatus.Idle, () => {
-    subscription.unsubscribe();
-    connection.destroy();
-  });
-
+  playStream(interaction, stream);
   memes.set(interaction.user.id, Meme.build({ name }));
 
   const row = new MessageActionRow().addComponents(

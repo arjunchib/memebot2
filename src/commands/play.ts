@@ -4,17 +4,11 @@ import {
   CommandInteraction,
   Interaction,
 } from "discord.js";
-import {
-  joinVoiceChannel,
-  createAudioResource,
-  StreamType,
-  AudioPlayerStatus,
-  createAudioPlayer,
-} from "@discordjs/voice";
 import fs from "fs";
 import { Meme } from "../models/meme";
 import { Command } from "../models/command";
 import { Op } from "sequelize";
+import { playStream } from "../play-stream";
 
 export const command: ApplicationCommandData = {
   name: "play",
@@ -45,39 +39,11 @@ async function play(interaction: CommandInteraction) {
       ephemeral: true,
     });
   }
-
   const name = interaction.options.getString("meme");
-
   const command = await Command.findOne({ where: { name }, include: Meme });
-  console.log(JSON.stringify(command, null, 2));
   const meme = command.Meme;
-
-  const player = createAudioPlayer();
-
-  player.on("error", (error) => {
-    console.error("Error:", error.message, "with track", error.resource);
-  });
-
   const stream = fs.createReadStream(`./audio/${meme.id}.webm`);
-  const resource = createAudioResource(stream, {
-    inputType: StreamType.WebmOpus,
-  });
-
-  const channel = interaction.member.voice.channel;
-  const connection = joinVoiceChannel({
-    channelId: channel.id,
-    guildId: interaction.member.guild.id,
-    adapterCreator: channel.guild.voiceAdapterCreator,
-  });
-
-  const subscription = connection.subscribe(player);
-  player.play(resource);
-
-  player.on(AudioPlayerStatus.Idle, () => {
-    subscription.unsubscribe();
-    connection.destroy();
-  });
-
+  playStream(interaction, stream);
   await interaction.reply(`Playing *${name}*`);
 }
 
