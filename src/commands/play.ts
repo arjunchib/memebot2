@@ -7,7 +7,7 @@ import fs from "fs";
 import { Meme } from "../models/meme";
 import { Command } from "../models/command";
 import { playStream } from "../play-stream";
-import { autocomplete, getCommandChoices } from "../autocomplete";
+import { autocompleteCommands } from "../autocomplete";
 
 export const command: ApplicationCommandData = {
   name: "play",
@@ -27,7 +27,7 @@ export async function run(interaction: Interaction) {
   if (interaction.isCommand()) {
     await play(interaction);
   } else if (interaction.isAutocomplete()) {
-    await autocomplete(interaction, getCommandChoices);
+    await autocompleteCommands(interaction);
   }
 }
 

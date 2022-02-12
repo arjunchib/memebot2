@@ -6,7 +6,7 @@ import {
 import { Meme } from "../models/meme";
 import { Command } from "../models/command";
 import { Tag } from "../models";
-import { autocomplete, getCommandChoices } from "../autocomplete";
+import { autocompleteCommands } from "../autocomplete";
 
 export const command: ApplicationCommandData = {
   name: "info",
@@ -26,7 +26,7 @@ export async function run(interaction: Interaction) {
   if (interaction.isCommand()) {
     await info(interaction);
   } else if (interaction.isAutocomplete()) {
-    await autocomplete(interaction, getCommandChoices);
+    await autocompleteCommands(interaction);
   }
 }
 

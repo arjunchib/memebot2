@@ -1,14 +1,12 @@
 import {
   ApplicationCommandData,
+  AutocompleteInteraction,
   CommandInteraction,
   Interaction,
 } from "discord.js";
 import { Meme, Command, Tag } from "../models";
-import {
-  autocomplete,
-  getTagChoices,
-  getCommandChoices,
-} from "../autocomplete";
+import { autocompleteCommands } from "../autocomplete";
+import { Op } from "sequelize";
 
 const options = [
   {
@@ -62,8 +60,11 @@ export const command: ApplicationCommandData = {
 export async function run(interaction: Interaction) {
   if (interaction.isAutocomplete()) {
     const sub = interaction.options.getSubcommand();
-    const choiceFn = sub === "list" ? getTagChoices : getCommandChoices;
-    await autocomplete(interaction, choiceFn);
+    if (sub === "list") {
+      await autocompleteTags(interaction);
+    } else {
+      await autocompleteCommands(interaction);
+    }
   } else if (interaction.isCommand()) {
     const sub = interaction.options.getSubcommand();
     if (sub === "list") {
@@ -118,4 +119,14 @@ async function list(interaction: CommandInteraction) {
       },
     ],
   });
+}
+
+async function autocompleteTags(interaction: AutocompleteInteraction) {
+  const value = interaction.options.getFocused().toString();
+  const tags = await Tag.findAll({
+    where: { name: { [Op.startsWith]: value } },
+    limit: 25,
+    attributes: ["name"],
+  });
+  await interaction.respond(tags.map((t) => ({ name: t.name, value: t.name })));
 }

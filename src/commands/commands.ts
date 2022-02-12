@@ -1,27 +1,12 @@
 import {
   ApplicationCommandData,
+  AutocompleteInteraction,
   CommandInteraction,
   Interaction,
 } from "discord.js";
 import { Meme } from "../models/meme";
 import { Command } from "../models/command";
-import { autocomplete, getCommandChoices } from "../autocomplete";
-
-const options = [
-  {
-    name: "meme",
-    description: "Command",
-    type: 3,
-    required: true,
-    autocomplete: true,
-  },
-  {
-    name: "name",
-    description: "Names separated by commas",
-    type: 3,
-    required: true,
-  },
-];
+import { autocompleteCommands } from "../autocomplete";
 
 export const command: ApplicationCommandData = {
   name: "commands",
@@ -31,13 +16,42 @@ export const command: ApplicationCommandData = {
       name: "add",
       description: "Add commands",
       type: 1,
-      options,
+      options: [
+        {
+          name: "meme",
+          description: "Command",
+          type: 3,
+          required: true,
+          autocomplete: true,
+        },
+        {
+          name: "name",
+          description: "Names separated by commas",
+          type: 3,
+          required: true,
+        },
+      ],
     },
     {
       name: "remove",
       description: "Remove commands",
       type: 1,
-      options,
+      options: [
+        {
+          name: "meme",
+          description: "Command",
+          type: 3,
+          required: true,
+          autocomplete: true,
+        },
+        {
+          name: "name",
+          description: "Names separated by commas",
+          type: 3,
+          required: true,
+          autocomplete: true,
+        },
+      ],
     },
   ],
 };
@@ -46,7 +60,12 @@ export async function run(interaction: Interaction) {
   if (interaction.isCommand()) {
     await modify(interaction);
   } else if (interaction.isAutocomplete()) {
-    await autocomplete(interaction, getCommandChoices);
+    const { name } = interaction.options.getFocused(true);
+    if (name === "meme") {
+      await autocompleteCommands(interaction);
+    } else if (name === "name") {
+      await autocompleteMemeCommands(interaction);
+    }
   }
 }
 
@@ -73,4 +92,21 @@ async function modify(interaction: CommandInteraction) {
       `Deleted *${commands.map((c) => c.name).join(", ")}*`
     );
   }
+}
+
+async function autocompleteMemeCommands(interaction: AutocompleteInteraction) {
+  const name = interaction.options.getString("meme");
+  const command = await Command.findOne({
+    where: { name },
+    include: { model: Meme, include: [Command] },
+  });
+  const choices = command.Meme.Commands.map((c) => c.name);
+  const value = interaction.options.getFocused().toString();
+  await interaction.respond(
+    choices
+      .filter((c) => c.startsWith(value))
+      .map((c) => {
+        return { name: c, value: c };
+      })
+  );
 }

@@ -7,7 +7,7 @@ import {
   MessageButton,
 } from "discord.js";
 import { Meme, Tag, Command } from "../models";
-import { autocomplete, getCommandChoices } from "../autocomplete";
+import { autocompleteCommands } from "../autocomplete";
 import fs from "fs/promises";
 
 export const command: ApplicationCommandData = {
@@ -30,7 +30,7 @@ export async function run(interaction: Interaction) {
   if (interaction.isCommand()) {
     await destroy(interaction);
   } else if (interaction.isAutocomplete()) {
-    await autocomplete(interaction, getCommandChoices);
+    await autocompleteCommands(interaction);
   } else if (interaction.isButton()) {
     await button(interaction);
   }
