@@ -94,13 +94,17 @@ async function runCommand(interaction: CommandInteraction) {
   const cmd: string[] = [];
   if (start) cmd.push("-ss", start);
   if (end) cmd.push("-to", end);
-  cmd.push("-i", "meme.webm", outFile);
+  cmd.push("-i", "meme.webm");
+  const arg = await getLoudnormArg(cmd);
+  cmd.push("-af", arg);
+  cmd.push(outFile);
   await ffmpeg.run(...cmd);
   const stream = new Duplex();
   stream.push(ffmpeg.FS("readFile", outFile));
   stream.push(null);
 
   playStream(interaction, stream);
+
   memes.set(interaction.user.id, Meme.build({ name }));
 
   const row = new MessageActionRow().addComponents(
@@ -137,4 +141,26 @@ async function runButton(interaction: ButtonInteraction) {
     memes.delete(interaction.user.id);
     await interaction.update({ content: "Skipped!", components: [] });
   }
+}
+
+async function getLoudnormArg(cmd: string[]): Promise<string> {
+  cmd = [...cmd];
+  cmd.push("-af", "loudnorm=I=-23:LRA=7:tp=-2:print_format=json");
+  cmd.push("-f", "null", "-");
+  let shouldLog = false;
+  let log = "";
+  ffmpeg.setLogger(({ message }) => {
+    if (message === "{") {
+      shouldLog = true;
+    }
+    if (shouldLog) {
+      log += message;
+    }
+    if (message === "}") {
+      shouldLog = false;
+    }
+  });
+  await ffmpeg.run(...cmd);
+  const measured = JSON.parse(log);
+  return `loudnorm=I=-23:LRA=7:tp=-2:measured_I=${measured.input_i}:measured_LRA=${measured.input_lra}:measured_tp=${measured.input_tp}:measured_thresh=${measured.input_thresh}`;
 }
