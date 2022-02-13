@@ -6,6 +6,7 @@ import {
   CommandInteraction,
   ApplicationCommandData,
   Interaction,
+  GuildMember,
 } from "discord.js";
 import ytdl from "ytdl-core";
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
@@ -14,6 +15,7 @@ import { Meme } from "../models/meme.js";
 import fs from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
 import { playStream } from "../play-stream.js";
+import { getVoiceConnection } from "@discordjs/voice";
 
 const ffmpeg = createFFmpeg({ log: false });
 const memes = new Map<string, Meme>();
@@ -70,6 +72,13 @@ async function runCommand(interaction: CommandInteraction) {
     });
   }
 
+  if (getVoiceConnection(interaction.guildId)) {
+    return await interaction.reply({
+      content: "Sorry busy 💅",
+      ephemeral: true,
+    });
+  }
+
   const url = interaction.options.getString("url");
   const name = interaction.options.getString("name");
   const start = interaction.options.getString("start");
@@ -82,7 +91,7 @@ async function runCommand(interaction: CommandInteraction) {
     });
   }
 
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   let info = await ytdl.getInfo(url);
   const format = ytdl.chooseFormat(info.formats, {
@@ -136,7 +145,11 @@ async function runButton(interaction: ButtonInteraction) {
     await meme?.save();
     const name = meme.name;
     await meme.createCommand({ name });
-    await interaction.update({ content: `Added *${name}*`, components: [] });
+    await interaction.update({ content: "Saved!", components: [] });
+    const author = (interaction.member as GuildMember).displayName;
+    await interaction.channel.send({
+      content: `Added *${name}* by *${author}*`,
+    });
   } else {
     memes.delete(interaction.user.id);
     await interaction.update({ content: "Skipped!", components: [] });

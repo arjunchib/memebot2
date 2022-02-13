@@ -8,6 +8,7 @@ import { Meme } from "../models/meme";
 import { Command } from "../models/command";
 import { playStream } from "../play-stream";
 import { autocompleteCommands } from "../autocomplete";
+import { getVoiceConnection } from "@discordjs/voice";
 
 export const command: ApplicationCommandData = {
   name: "play",
@@ -35,6 +36,12 @@ async function play(interaction: CommandInteraction) {
   if (!("voice" in interaction.member) || !interaction.member.voice.channel) {
     return await interaction.reply({
       content: "Must be connected to voice channel",
+      ephemeral: true,
+    });
+  }
+  if (getVoiceConnection(interaction.guildId)) {
+    return await interaction.reply({
+      content: "Sorry busy 💅",
       ephemeral: true,
     });
   }

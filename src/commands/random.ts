@@ -3,6 +3,7 @@ import fs from "fs";
 import { Meme } from "../models/meme";
 import { sequelize } from "../db";
 import { playStream } from "../play-stream";
+import { getVoiceConnection } from "@discordjs/voice";
 
 export const command: ApplicationCommandData = {
   name: "random",
@@ -13,6 +14,12 @@ export async function run(interaction: CommandInteraction) {
   if (!("voice" in interaction.member) || !interaction.member.voice.channel) {
     return await interaction.reply({
       content: "Must be connected to voice channel",
+      ephemeral: true,
+    });
+  }
+  if (getVoiceConnection(interaction.guildId)) {
+    return await interaction.reply({
+      content: "Sorry busy 💅",
       ephemeral: true,
     });
   }

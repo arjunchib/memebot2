@@ -5,8 +5,14 @@ import {
   joinVoiceChannel,
   StreamType,
 } from "@discordjs/voice";
+import { CommandInteraction } from "discord.js";
+import type { Readable } from "stream";
 
-export function playStream(interaction, stream) {
+export function playStream(interaction: CommandInteraction, stream: Readable) {
+  if (!("voice" in interaction.member) || !interaction.member.voice.channel) {
+    return;
+  }
+
   const player = createAudioPlayer();
 
   player.on("error", console.error);
