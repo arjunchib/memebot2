@@ -17,10 +17,11 @@ const options = [
     autocomplete: true,
   },
   {
-    name: "name",
+    name: "tag",
     description: "Names separated by commas",
     type: 3,
     required: true,
+    autocomplete: true,
   },
 ];
 
@@ -63,7 +64,16 @@ export async function run(interaction: Interaction) {
     if (sub === "list") {
       await autocompleteTags(interaction);
     } else {
-      await autocompleteCommands(interaction);
+      const { name } = interaction.options.getFocused(true);
+      if (name === "meme") {
+        await autocompleteCommands(interaction);
+      } else if (name === "tag") {
+        if (sub === "add") {
+          await autocompleteTags(interaction);
+        } else if (sub === "remove") {
+          await autocompleteMemeTags(interaction);
+        }
+      }
     }
   } else if (interaction.isCommand()) {
     const sub = interaction.options.getSubcommand();
@@ -129,4 +139,22 @@ async function autocompleteTags(interaction: AutocompleteInteraction) {
     attributes: ["name"],
   });
   await interaction.respond(tags.map((t) => ({ name: t.name, value: t.name })));
+}
+
+async function autocompleteMemeTags(interaction: AutocompleteInteraction) {
+  const name = interaction.options.getString("meme");
+  const command = await Command.findOne({
+    where: { name },
+    include: { model: Meme, include: [Tag] },
+  });
+  const choices = command.Meme.Tags.map((t) => t.name);
+  const value = interaction.options.getFocused().toString();
+  console.log(choices);
+  await interaction.respond(
+    choices
+      .filter((t) => t.startsWith(value))
+      .map((t) => {
+        return { name: t, value: t };
+      })
+  );
 }
