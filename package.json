@@ -19,8 +19,6 @@
     "@discordjs/voice": "^0.8.0",
     "@ffmpeg/core": "^0.10.0",
     "@ffmpeg/ffmpeg": "^0.10.1",
-    "@types/node": "^17.0.16",
-    "@types/validator": "^13.7.1",
     "axios": "^0.25.0",
     "discord.js": "^13.6.0",
     "esbuild": "^0.14.18",
@@ -34,6 +32,8 @@
     "ytdl-core": "^4.10.1"
   },
   "devDependencies": {
-    "@types/fs-extra": "^9.0.13"
+    "@types/fs-extra": "^9.0.13",
+    "@types/node": "^17.0.16",
+    "@types/validator": "^13.7.1"
   }
 }
