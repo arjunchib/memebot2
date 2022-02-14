@@ -9,15 +9,13 @@ import {
   GuildMember,
 } from "discord.js";
 import ytdl from "ytdl-core";
-import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
-import { Duplex } from "stream";
 import { Meme } from "../models/meme.js";
-import fs from "fs/promises";
+import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { playStream } from "../play-stream.js";
 import { getVoiceConnection } from "@discordjs/voice";
+import { spawn } from "child_process";
 
-const ffmpeg = createFFmpeg({ log: false });
 const memes = new Map<string, Meme>();
 
 export const command: ApplicationCommandData = {
@@ -50,9 +48,6 @@ export const command: ApplicationCommandData = {
 };
 
 export async function run(interaction: BaseCommandInteraction) {
-  if (!ffmpeg.isLoaded()) {
-    await ffmpeg.load();
-  }
   if (interaction.isCommand()) {
     await runCommand(interaction);
   } else if (interaction.isButton()) {
@@ -60,8 +55,12 @@ export async function run(interaction: BaseCommandInteraction) {
   }
 }
 
-function userFile(interaction: Interaction) {
-  return `${interaction.user.id}.webm`;
+function normalizedFile(interaction: Interaction) {
+  return `.temp/${interaction.user.id}.webm`;
+}
+
+function rawFile(interaction: Interaction) {
+  return `.temp/${interaction.user.id}-raw.webm`;
 }
 
 async function runCommand(interaction: CommandInteraction) {
@@ -98,21 +97,17 @@ async function runCommand(interaction: CommandInteraction) {
     quality: "highestaudio",
     filter: (format) => format.codecs === "opus" && format.container === "webm",
   });
-  const outFile = userFile(interaction);
-  ffmpeg.FS("writeFile", "meme.webm", await fetchFile(format.url));
-  const cmd: string[] = [];
+  const inFile = rawFile(interaction);
+  const outFile = normalizedFile(interaction);
+  const cmd: string[] = ["-hide_banner", "-y"];
   if (start) cmd.push("-ss", start);
   if (end) cmd.push("-to", end);
-  cmd.push("-i", "meme.webm");
-  const arg = await getLoudnormArg(cmd);
-  cmd.push("-af", arg);
-  cmd.push(outFile);
-  await ffmpeg.run(...cmd);
-  const stream = new Duplex();
-  stream.push(ffmpeg.FS("readFile", outFile));
-  stream.push(null);
+  cmd.push("-i", format.url);
+  cmd.push(inFile);
+  await ffmpeg(...cmd);
+  await normalizeAudio(inFile, outFile);
 
-  playStream(interaction, stream);
+  playStream(interaction, fs.createReadStream(outFile));
 
   memes.set(interaction.user.id, Meme.build({ name }));
 
@@ -137,9 +132,9 @@ async function runButton(interaction: ButtonInteraction) {
   if (interaction.customId === "save") {
     const meme = memes.get(interaction.user.id);
     const id = uuidv4();
-    await fs.writeFile(
-      `./audio/${id}.webm`,
-      ffmpeg.FS("readFile", userFile(interaction))
+    await fs.promises.copyFile(
+      normalizedFile(interaction),
+      `./audio/${id}.webm`
     );
     meme.id = id;
     await meme?.save();
@@ -156,24 +151,45 @@ async function runButton(interaction: ButtonInteraction) {
   }
 }
 
-async function getLoudnormArg(cmd: string[]): Promise<string> {
-  cmd = [...cmd];
+async function normalizeAudio(
+  inputFile: string,
+  outputFile: string
+): Promise<any> {
+  let cmd = [];
+  cmd.push("-hide_banner", "-y");
+  cmd.push("-i", inputFile);
   cmd.push("-af", "loudnorm=I=-23:LRA=7:tp=-2:print_format=json");
   cmd.push("-f", "null", "-");
-  let shouldLog = false;
-  let log = "";
-  ffmpeg.setLogger(({ message }) => {
-    if (message === "{") {
-      shouldLog = true;
-    }
-    if (shouldLog) {
-      log += message;
-    }
-    if (message === "}") {
-      shouldLog = false;
-    }
+
+  const output = await ffmpeg(...cmd);
+
+  const loudnorm = JSON.parse(output.match(/{[\s\S]*}/)[0]);
+  const filter = `loudnorm=I=-23:LRA=7:tp=-2:measured_I=${loudnorm.input_i}:measured_LRA=${loudnorm.input_lra}:measured_tp=${loudnorm.input_tp}:measured_thresh=${loudnorm.input_thresh}:print_format=json`;
+
+  cmd = [];
+  cmd.push("-hide_banner", "-y");
+  cmd.push("-i", inputFile);
+  cmd.push("-af", filter);
+  cmd.push(outputFile);
+
+  return await ffmpeg(...cmd);
+}
+
+async function ffmpeg(...cmd): Promise<string> {
+  const child = spawn("ffmpeg", cmd);
+
+  let output = "";
+
+  child.stderr.on("data", (data) => {
+    output += data.toString();
   });
-  await ffmpeg.run(...cmd);
-  const measured = JSON.parse(log);
-  return `loudnorm=I=-23:LRA=7:tp=-2:measured_I=${measured.input_i}:measured_LRA=${measured.input_lra}:measured_tp=${measured.input_tp}:measured_thresh=${measured.input_thresh}`;
+
+  await new Promise<void>((resolve, reject) => {
+    child.on("exit", (code) => {
+      if (!code) resolve();
+      else reject(new Error("Failed while running ffmpeg"));
+    });
+  });
+
+  return output;
 }

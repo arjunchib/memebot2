@@ -5,3 +5,4 @@ dist
 .vscode
 audio
 .DS_Store
+.temp

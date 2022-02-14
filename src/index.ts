@@ -1,6 +1,9 @@
 import { Client, Intents, Message } from "discord.js";
 import { token, primaryGuildId } from "../config.js";
 import * as commands from "./commands";
+import fs from "fs-extra";
+
+await Promise.all([fs.emptyDir(".temp"), fs.ensureDir("audio")]);
 
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES],
