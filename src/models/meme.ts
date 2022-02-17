@@ -18,6 +18,14 @@ export class Meme extends Model<
 > {
   declare id: string;
   declare name: string;
+  declare duration: number;
+  declare size: number;
+  declare bit_rate: number;
+  declare loudness_i: number;
+  declare loudness_lra: number;
+  declare loudness_tp: number;
+  declare loudness_thresh: number;
+  declare author_id: string;
 
   declare Commands: NonAttribute<Command[]>;
   declare Tags: NonAttribute<Tag[]>;
@@ -40,6 +48,30 @@ Meme.init(
     name: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    duration: {
+      type: DataTypes.FLOAT,
+    },
+    size: {
+      type: DataTypes.INTEGER,
+    },
+    bit_rate: {
+      type: DataTypes.INTEGER,
+    },
+    loudness_i: {
+      type: DataTypes.FLOAT,
+    },
+    loudness_lra: {
+      type: DataTypes.FLOAT,
+    },
+    loudness_tp: {
+      type: DataTypes.FLOAT,
+    },
+    loudness_thresh: {
+      type: DataTypes.FLOAT,
+    },
+    author_id: {
+      type: DataTypes.STRING,
     },
   },
   { sequelize }

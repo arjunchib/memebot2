@@ -14,7 +14,7 @@ import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { playStream } from "../play-stream.js";
 import { getVoiceConnection } from "@discordjs/voice";
-import { spawn } from "child_process";
+import { download, loudnorm, probe } from "../audio.js";
 
 const memes = new Map<string, Meme>();
 
@@ -99,17 +99,32 @@ async function runCommand(interaction: CommandInteraction) {
   });
   const inFile = rawFile(interaction);
   const outFile = normalizedFile(interaction);
-  const cmd: string[] = ["-hide_banner", "-y"];
-  if (start) cmd.push("-ss", start);
-  if (end) cmd.push("-to", end);
-  cmd.push("-i", format.url);
-  cmd.push(inFile);
-  await ffmpeg(...cmd);
-  await normalizeAudio(inFile, outFile);
+
+  await download(format.url, inFile, { start, end });
+  let loudness = await loudnorm(inFile);
+  loudness = await loudnorm(inFile, outFile, loudness);
 
   playStream(interaction, fs.createReadStream(outFile));
 
-  memes.set(interaction.user.id, Meme.build({ name }));
+  const results = await probe(outFile);
+  const {
+    output_i: loudness_i,
+    output_lra: loudness_lra,
+    output_thresh: loudness_thresh,
+    output_tp: loudness_tp,
+  } = loudness;
+  memes.set(
+    interaction.user.id,
+    Meme.build({
+      name,
+      author_id: interaction.user.id,
+      loudness_i,
+      loudness_lra,
+      loudness_thresh,
+      loudness_tp,
+      ...results,
+    })
+  );
 
   const row = new MessageActionRow().addComponents(
     new MessageButton()
@@ -149,47 +164,4 @@ async function runButton(interaction: ButtonInteraction) {
     memes.delete(interaction.user.id);
     await interaction.update({ content: "Skipped!", components: [] });
   }
-}
-
-async function normalizeAudio(
-  inputFile: string,
-  outputFile: string
-): Promise<any> {
-  let cmd = [];
-  cmd.push("-hide_banner", "-y");
-  cmd.push("-i", inputFile);
-  cmd.push("-af", "loudnorm=I=-23:LRA=7:tp=-2:print_format=json");
-  cmd.push("-f", "null", "-");
-
-  const output = await ffmpeg(...cmd);
-
-  const loudnorm = JSON.parse(output.match(/{[\s\S]*}/)[0]);
-  const filter = `loudnorm=I=-23:LRA=7:tp=-2:measured_I=${loudnorm.input_i}:measured_LRA=${loudnorm.input_lra}:measured_tp=${loudnorm.input_tp}:measured_thresh=${loudnorm.input_thresh}:print_format=json`;
-
-  cmd = [];
-  cmd.push("-hide_banner", "-y");
-  cmd.push("-i", inputFile);
-  cmd.push("-af", filter);
-  cmd.push(outputFile);
-
-  return await ffmpeg(...cmd);
-}
-
-async function ffmpeg(...cmd): Promise<string> {
-  const child = spawn("ffmpeg", cmd);
-
-  let output = "";
-
-  child.stderr.on("data", (data) => {
-    output += data.toString();
-  });
-
-  await new Promise<void>((resolve, reject) => {
-    child.on("exit", (code) => {
-      if (!code) resolve();
-      else reject(new Error("Failed while running ffmpeg"));
-    });
-  });
-
-  return output;
 }

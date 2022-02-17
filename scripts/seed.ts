@@ -1,12 +1,11 @@
-import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import axios from "axios";
-import { Duplex } from "stream";
 import { v4 as uuidv4 } from "uuid";
 import { Command } from "../src/models/command";
 import { Meme } from "../src/models/meme";
 import { Tag } from "../src/models/tag";
 import fs from "fs/promises";
 import { sequelize } from "../src/db";
+import { probe, download } from "../src/audio";
 
 function dedupe(arr: any[]): any[] {
   return [...new Set(arr)];
@@ -23,7 +22,7 @@ try {
   await fs.mkdir("./audio");
 }
 
-const res = await axios.get("https://archive.memebot.life/memes/all.json");
+const res = await axios.get("http://localhost:3000/memes/all.json");
 
 const memes = res.data.slice(0, 25).map((m) => {
   return {
@@ -33,18 +32,16 @@ const memes = res.data.slice(0, 25).map((m) => {
 }) as any[];
 
 if (process.argv[2] === "--audio") {
-  const ffmpeg = createFFmpeg({ log: false });
-  if (!ffmpeg.isLoaded()) {
-    await ffmpeg.load();
-  }
-
   for (const m of memes) {
-    ffmpeg.FS("writeFile", "meme.webm", await fetchFile(m.audio_opus));
-    await ffmpeg.run("-i", "meme.webm", "out.webm");
-    const stream = new Duplex();
-    stream.push(ffmpeg.FS("readFile", "out.webm"));
-    stream.push(null);
-    await fs.writeFile(`./audio/${m.id}.webm`, stream);
+    const url = m.audio_opus.startsWith("http")
+      ? m.audio_opus
+      : `http://127.0.0.1:3000${m.audio_opus}`;
+    const file = `./audio/${m.id}.webm`;
+    await download(url, file);
+    const { duration, size, bit_rate } = await probe(file);
+    m.duration = duration;
+    m.size = size;
+    m.bit_rate = bit_rate;
   }
 }
 
@@ -52,6 +49,15 @@ const newMemes = memes.map((m) => {
   return {
     id: m.id,
     name: m.name,
+    duration: m.duration,
+    size: m.size,
+    bit_rate: m.bit_rate,
+    loudness_i: m.loudness_i,
+    loudness_lra: m.loudness_lra,
+    loudness_tp: m.loudness_tp,
+    loudness_thresh: m.loudness_thresh,
+    createdAt: new Date(m.created_at),
+    updatedAt: new Date(m.updated_at),
     Commands: m.commands.map((name) => {
       return { name };
     }),
