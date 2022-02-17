@@ -6,6 +6,7 @@ import { Tag } from "../src/models/tag";
 import fs from "fs/promises";
 import { sequelize } from "../src/db";
 import { probe, download } from "../src/audio";
+import { memeArchiveHost } from "../config.js";
 
 function dedupe(arr: any[]): any[] {
   return [...new Set(arr)];
@@ -22,7 +23,7 @@ try {
   await fs.mkdir("./audio");
 }
 
-const res = await axios.get("http://localhost:3000/memes/all.json");
+const res = await axios.get(`${memeArchiveHost}/memes/all.json`);
 
 const memes = res.data.slice(0, 25).map((m) => {
   return {
