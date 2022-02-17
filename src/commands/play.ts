@@ -47,6 +47,12 @@ async function play(interaction: CommandInteraction) {
   }
   const name = interaction.options.getString("meme");
   const command = await Command.findOne({ where: { name }, include: Meme });
+  if (command == null) {
+    return await interaction.reply({
+      content: "Could not find a meme with that command!",
+      ephemeral: true,
+    });
+  }
   const meme = command.Meme;
   const stream = fs.createReadStream(`./audio/${meme.id}.webm`);
   playStream(interaction, stream);
