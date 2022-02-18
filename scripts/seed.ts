@@ -1,5 +1,5 @@
 import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
+import { v5 as uuidv5 } from "uuid";
 import { Command } from "../src/models/command";
 import { Meme } from "../src/models/meme";
 import { Tag } from "../src/models/tag";
@@ -16,35 +16,14 @@ Meme.destroy({ truncate: true });
 Command.destroy({ truncate: true });
 Tag.destroy({ truncate: true });
 
-try {
-  const files = await fs.readdir("./audio");
-  Promise.all(files.map((f) => fs.unlink(`./audio/${f}`)));
-} catch {
-  await fs.mkdir("./audio");
-}
-
 const res = await axios.get(`${memeArchiveHost}/memes/all.json`);
 
 const memes = res.data.slice(0, 25).map((m) => {
   return {
     ...m,
-    id: uuidv4(),
+    id: uuidv5(m.id.toString(), "d9ad689b-57d5-4938-b216-7c24ad353462"),
   };
 }) as any[];
-
-if (process.argv[2] === "--audio") {
-  for (const m of memes) {
-    const url = m.audio_opus.startsWith("http")
-      ? m.audio_opus
-      : `http://127.0.0.1:3000${m.audio_opus}`;
-    const file = `./audio/${m.id}.webm`;
-    await download(url, file);
-    const { duration, size, bit_rate } = await probe(file);
-    m.duration = duration;
-    m.size = size;
-    m.bit_rate = bit_rate;
-  }
-}
 
 const newMemes = memes.map((m) => {
   return {
@@ -64,6 +43,33 @@ const newMemes = memes.map((m) => {
     }),
   };
 });
+
+let files = [];
+try {
+  files = await fs.readdir("./audio");
+} catch {
+  await fs.mkdir("./audio");
+}
+for (const m of memes) {
+  if (files.includes(`${m.id}.webm`)) {
+    continue;
+  }
+  const url = m.audio_opus.startsWith("http")
+    ? m.audio_opus
+    : `http://127.0.0.1:3000${m.audio_opus}`;
+  const file = `./audio/${m.id}.webm`;
+  await download(url, file);
+  const { duration, size, bit_rate } = await probe(file);
+  m.duration = duration;
+  m.size = size;
+  m.bit_rate = bit_rate;
+}
+for (const f of files) {
+  if (!memes.some((m) => `${m.id}.webm` === f)) {
+    await fs.unlink(f);
+  }
+}
+
 await Meme.bulkCreate(newMemes, {
   include: [Command],
 });
