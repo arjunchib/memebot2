@@ -6,3 +6,4 @@ dist
 audio
 .DS_Store
 .temp
+.git

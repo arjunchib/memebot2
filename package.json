@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "deploy": "rsync -azP --exclude-from=.gitignore ./ mb:memebot/",
     "seed": "pnpm build:scripts && node --enable-source-maps dist/scripts/seed.js",
     "migrate": "pnpm build:scripts && pnpm build:db && node --enable-source-maps dist/scripts/migrator.js",
     "dev": "pnpm build:bot && node --enable-source-maps dist/bot.js",

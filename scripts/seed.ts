@@ -18,7 +18,7 @@ Tag.destroy({ truncate: true });
 
 const res = await axios.get(`${memeArchiveHost}/memes/all.json`);
 
-const memes = res.data.slice(0, 25).map((m) => {
+const memes = res.data.map((m) => {
   return {
     ...m,
     id: uuidv5(m.id.toString(), "d9ad689b-57d5-4938-b216-7c24ad353462"),
