@@ -2,11 +2,13 @@ import {
   ApplicationCommandData,
   CommandInteraction,
   Interaction,
+  MessageEmbed,
 } from "discord.js";
 import { Meme } from "../models/meme";
 import { Command } from "../models/command";
 import { Tag } from "../models";
 import { autocompleteCommands } from "../autocomplete";
+import prettyBytes from "pretty-bytes";
 
 export const command: ApplicationCommandData = {
   name: "info",
@@ -46,22 +48,42 @@ async function info(interaction: CommandInteraction) {
   }
 
   const meme = command.Meme;
+  const embed = new MessageEmbed().setTitle(meme.name).addFields(
+    { name: "commands", value: meme.Commands.map((c) => c.name).join(", ") },
+    {
+      name: "tags",
+      value: meme.Tags.map((t) => t.name).join(", ") || "No tags set",
+    },
+    { name: "duration", value: `${meme.duration}s`, inline: true },
+    { name: "size", value: prettyBytes(meme.size), inline: true },
+    {
+      name: "bit rate",
+      value: prettyBytes(meme.bit_rate, { bits: true }),
+      inline: true,
+    },
+    {
+      name: "level",
+      value: `${meme.loudness_i} LUFS`,
+      inline: true,
+    },
+    {
+      name: "range",
+      value: `${meme.loudness_lra} LRA`,
+      inline: true,
+    },
+    {
+      name: "true peak",
+      value: `${meme.loudness_tp} dbTP`,
+      inline: true,
+    },
+    {
+      name: "threshold",
+      value: `${meme.loudness_thresh} LUFS`,
+      inline: true,
+    }
+  );
 
   await interaction.reply({
-    embeds: [
-      {
-        title: meme.name,
-        fields: [
-          {
-            name: "commands",
-            value: meme.Commands.map((c) => c.name).join(", "),
-          },
-          {
-            name: "tags",
-            value: meme.Tags.map((t) => t.name).join(", "),
-          },
-        ],
-      },
-    ],
+    embeds: [embed],
   });
 }

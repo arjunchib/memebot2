@@ -27,6 +27,7 @@ const memes = res.data.map((m) => {
 
 const newMemes = memes.map((m) => {
   return {
+    audio: m.audio_opus,
     id: m.id,
     name: m.name,
     duration: m.duration,
@@ -50,19 +51,19 @@ try {
 } catch {
   await fs.mkdir("./audio");
 }
-for (const m of memes) {
-  if (files.includes(`${m.id}.webm`)) {
-    continue;
-  }
-  const url = m.audio_opus.startsWith("http")
-    ? m.audio_opus
-    : `http://127.0.0.1:3000${m.audio_opus}`;
+for (const m of newMemes) {
   const file = `./audio/${m.id}.webm`;
-  await download(url, file);
+  if (!files.includes(`${m.id}.webm`)) {
+    const url = m.audio.startsWith("http")
+      ? m.audio
+      : `http://127.0.0.1:3000${m.audio_opus}`;
+    await download(url, file);
+  }
   const { duration, size, bit_rate } = await probe(file);
   m.duration = duration;
   m.size = size;
   m.bit_rate = bit_rate;
+  delete m.audio;
 }
 for (const f of files) {
   if (!memes.some((m) => `${m.id}.webm` === f)) {
