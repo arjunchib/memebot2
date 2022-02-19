@@ -35,4 +35,6 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+client.application.commands.set([]);
+
 client.login(token);
