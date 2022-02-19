@@ -42,15 +42,20 @@ async function ffprobe(...args: string[]): Promise<string> {
   const child = spawn("ffprobe", args);
 
   let output = "";
+  let error = "";
 
   child.stdout.on("data", (data) => {
     output += data.toString();
   });
 
+  child.stderr.on("data", (data) => {
+    error += data.toString();
+  });
+
   await new Promise<void>((resolve, reject) => {
-    child.on("exit", (code) => {
+    child.on("close", (code) => {
       if (!code) resolve();
-      else reject(new Error(`Failed while running ffprobe`));
+      else reject(new Error(`Failed while running ffprobe: ${error}`));
     });
   });
 

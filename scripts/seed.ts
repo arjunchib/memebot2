@@ -17,56 +17,60 @@ Command.destroy({ truncate: true });
 Tag.destroy({ truncate: true });
 
 const res = await axios.get(`${memeArchiveHost}/memes/all.json`);
+const memes = res.data;
+const legacyMemes = JSON.parse(
+  await fs.readFile("legacy-memes.json", { encoding: "utf8" })
+);
 
-const memes = res.data.map((m) => {
-  return {
-    ...m,
-    id: uuidv5(m.id.toString(), "d9ad689b-57d5-4938-b216-7c24ad353462"),
-  };
-}) as any[];
-
-const newMemes = memes.map((m) => {
-  return {
-    audio: m.audio_opus,
-    id: m.id,
-    name: m.name,
-    duration: m.duration,
-    size: m.size,
-    bit_rate: m.bit_rate,
-    loudness_i: m.loudness_i,
-    loudness_lra: m.loudness_lra,
-    loudness_tp: m.loudness_tp,
-    loudness_thresh: m.loudness_thresh,
-    createdAt: new Date(m.created_at),
-    updatedAt: new Date(m.updated_at),
-    Commands: m.commands.map((name) => {
-      return { name };
-    }),
-  };
-});
-
+// Get files or create dir if not present
 let files = [];
 try {
   files = await fs.readdir("./audio");
 } catch {
   await fs.mkdir("./audio");
 }
-for (const m of newMemes) {
-  const file = `./audio/${m.id}.webm`;
-  if (!files.includes(`${m.id}.webm`)) {
-    const url = m.audio.startsWith("http")
-      ? m.audio
-      : `http://127.0.0.1:3000${m.audio_opus}`;
-    await download(url, file);
-  }
-  const { duration, size, bit_rate } = await probe(file);
-  m.duration = duration;
-  m.size = size;
-  m.bit_rate = bit_rate;
-  delete m.audio;
-}
+
+const newMemes = await Promise.all(
+  memes.map(async (m) => {
+    // Generate a consistent id (so no need to re-download audio)
+    const id = uuidv5(m.id.toString(), "d9ad689b-57d5-4938-b216-7c24ad353462");
+
+    // Download audio if not present
+    const file = `./audio/${id}.webm`;
+    if (!files.includes(`${id}.webm`)) {
+      const url = m.audio_opus.startsWith("http")
+        ? m.audio_opus
+        : `http://127.0.0.1:3000${m.audio_opus}`;
+      await download(url, file);
+    }
+
+    // Analyze audio
+    const { duration, size, bit_rate } = await probe(file);
+
+    // Create meme for db insertion
+    return {
+      id,
+      name: m.name,
+      duration,
+      size,
+      bit_rate,
+      loudness_i: m.loudness_i,
+      loudness_lra: m.loudness_lra,
+      loudness_tp: m.loudness_tp,
+      loudness_thresh: m.loudness_thresh,
+      createdAt: new Date(m.created_at),
+      updatedAt: new Date(m.updated_at),
+      author_id: legacyMemes.find((l) => l.name === m.name)?.author?.id || null,
+      Commands: m.commands.map((name) => {
+        return { name };
+      }),
+    };
+  })
+);
+
+// Delete unused audio files
 for (const f of files) {
-  if (!memes.some((m) => `${m.id}.webm` === f)) {
+  if (!newMemes.some((m) => `${m.id}.webm` === f)) {
     await fs.unlink(f);
   }
 }
@@ -83,7 +87,7 @@ await Tag.bulkCreate(newTags);
 const newMemeTags = memes.flatMap((m) => {
   return m.tags.map((t) => {
     return {
-      memeId: m.id,
+      memeId: newMemes.find((n) => n.name === m.name).id,
       tagName: t,
       createdAt: new Date(),
       updatedAt: new Date(),
