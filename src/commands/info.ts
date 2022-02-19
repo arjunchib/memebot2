@@ -55,12 +55,6 @@ async function info(interaction: CommandInteraction) {
       value: meme.Tags.map((t) => t.name).join(", ") || "No tags set",
     },
     { name: "duration", value: `${meme.duration}s`, inline: true },
-    { name: "size", value: prettyBytes(meme.size), inline: true },
-    {
-      name: "bit rate",
-      value: prettyBytes(meme.bit_rate, { bits: true }),
-      inline: true,
-    },
     {
       name: "created",
       value: new Intl.DateTimeFormat("en-US").format(meme.createdAt),
