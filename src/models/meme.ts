@@ -28,6 +28,7 @@ export class Meme extends Model<
   declare loudness_thresh: number;
   declare author_id: string;
   declare playCount: number;
+  declare randomPlayCount: number;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -78,6 +79,11 @@ Meme.init(
       type: DataTypes.STRING,
     },
     playCount: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      allowNull: false,
+    },
+    randomPlayCount: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
       allowNull: false,

@@ -17,6 +17,12 @@ const runners = Object.values(commands).reduce((acc, mod) => {
 
 client.once("ready", async () => {
   console.log("Ready!");
+  console.log(
+    client.generateInvite({
+      permissions: ["ADMINISTRATOR"],
+      scopes: ["bot", "applications.commands"],
+    })
+  );
   const primaryGuild = await client.guilds.fetch(primaryGuildId);
   primaryGuild.commands.set(commandData);
 });
