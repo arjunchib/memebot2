@@ -57,4 +57,5 @@ async function play(interaction: CommandInteraction) {
   const stream = fs.createReadStream(`./audio/${meme.id}.webm`);
   playStream(interaction, stream);
   await interaction.reply(`Playing *${name}*`);
+  await meme.increment("playCount");
 }

@@ -70,6 +70,11 @@ async function info(interaction: CommandInteraction) {
       name: "updated",
       value: new Intl.DateTimeFormat("en-US").format(meme.updatedAt),
       inline: true,
+    },
+    {
+      name: "plays",
+      value: meme.playCount.toString(),
+      inline: true,
     }
   );
 
