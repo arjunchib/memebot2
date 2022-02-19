@@ -62,26 +62,22 @@ async function info(interaction: CommandInteraction) {
       inline: true,
     },
     {
-      name: "level",
-      value: `${meme.loudness_i} LUFS`,
+      name: "created",
+      value: new Intl.DateTimeFormat("en-US").format(meme.createdAt),
       inline: true,
     },
     {
-      name: "range",
-      value: `${meme.loudness_lra} LRA`,
-      inline: true,
-    },
-    {
-      name: "true peak",
-      value: `${meme.loudness_tp} dbTP`,
-      inline: true,
-    },
-    {
-      name: "threshold",
-      value: `${meme.loudness_thresh} LUFS`,
+      name: "updated",
+      value: new Intl.DateTimeFormat("en-US").format(meme.updatedAt),
       inline: true,
     }
   );
+
+  if (meme.author_id) {
+    const author = await interaction.client.users.fetch(meme.author_id);
+    const iconURL = await author.avatarURL();
+    embed.setAuthor({ name: author.username, iconURL });
+  }
 
   await interaction.reply({
     embeds: [embed],

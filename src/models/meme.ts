@@ -7,6 +7,7 @@ import {
   HasManyRemoveAssociationsMixin,
   HasManyGetAssociationsMixin,
   NonAttribute,
+  CreationOptional,
 } from "sequelize";
 import { sequelize } from "../db";
 import { Command } from "./command";
@@ -26,6 +27,8 @@ export class Meme extends Model<
   declare loudness_tp: number;
   declare loudness_thresh: number;
   declare author_id: string;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
 
   declare Commands: NonAttribute<Command[]>;
   declare Tags: NonAttribute<Tag[]>;
@@ -73,6 +76,8 @@ Meme.init(
     author_id: {
       type: DataTypes.STRING,
     },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
   },
   { sequelize }
 );
