@@ -19,7 +19,7 @@ async function run(command: string, ...args: string[]) {
   return output;
 }
 
-async function ffmpeg(...args: string[]): Promise<string> {
+export async function ffmpeg(...args: string[]): Promise<string> {
   const child = spawn("ffmpeg", args);
 
   let output = "";

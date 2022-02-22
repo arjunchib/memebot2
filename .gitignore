@@ -7,3 +7,4 @@ audio
 .DS_Store
 .temp
 .git
+config.ts

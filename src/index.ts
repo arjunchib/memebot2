@@ -1,4 +1,4 @@
-import { Client, Intents, Message } from "discord.js";
+import { Client, Intents, Message, MessageAttachment } from "discord.js";
 import { token, primaryGuildId } from "../config.js";
 import * as commands from "./commands";
 import fs from "fs-extra";
@@ -40,7 +40,5 @@ client.on("interactionCreate", async (interaction) => {
     console.error(e);
   }
 });
-
-client.application?.commands.set([]);
 
 client.login(token);

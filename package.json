@@ -8,6 +8,7 @@
     "deploy": "rsync -azP --exclude-from=.gitignore ./ mb:memebot/",
     "seed": "pnpm build:scripts && node --enable-source-maps dist/scripts/seed.js",
     "migrate": "pnpm build:scripts && pnpm build:db && node --enable-source-maps dist/scripts/migrator.js",
+    "waveform": "pnpm build:scripts && pnpm build:db && node --enable-source-maps dist/scripts/waveform.js",
     "dev": "pnpm build:bot && node --enable-source-maps dist/bot.js",
     "build:bot": "esbuild src/index.ts --outfile=dist/bot.js --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
     "build:db": "esbuild src/db/migrations/*.ts --outdir=dist/migrations --format=esm --bundle --platform=node --sourcemap=inline --external:'./node_modules/*'",
@@ -16,6 +17,7 @@
   "author": "Arjun Chib",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.52.0",
     "@discordjs/opus": "^0.7.0",
     "@discordjs/voice": "^0.8.0",
     "@ffmpeg/core": "^0.10.0",
