@@ -8,7 +8,7 @@ import { Meme } from "../models/meme";
 import { Command } from "../models/command";
 import { Tag } from "../models";
 import { autocompleteCommands } from "../autocomplete";
-import prettyBytes from "pretty-bytes";
+import { s3Config } from "../../config";
 
 export const command: ApplicationCommandData = {
   name: "info",
@@ -51,8 +51,9 @@ async function info(interaction: CommandInteraction) {
   const embed = new MessageEmbed()
     .setTitle(meme.name)
     .setImage(
-      `https://ewr1.vultrobjects.com/memebot-dev/waveforms/${meme.id}.png`
+      `https://ewr1.vultrobjects.com/${s3Config.bucket}/waveforms/${meme.id}.png`
     )
+    .setFooter({ text: meme.id })
     .addFields(
       {
         name: "commands",
