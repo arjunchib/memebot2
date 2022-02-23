@@ -56,6 +56,11 @@ export const command: ApplicationCommandData = {
         },
       ],
     },
+    {
+      name: "all",
+      description: "List all tags",
+      type: 1,
+    },
   ],
 };
 
@@ -80,6 +85,8 @@ export async function run(interaction: Interaction) {
     const sub = interaction.options.getSubcommand();
     if (sub === "list") {
       await list(interaction);
+    } else if (sub === "all") {
+      await all(interaction);
     } else {
       await modify(interaction);
     }
@@ -145,6 +152,14 @@ async function list(interaction: CommandInteraction) {
         fields: [{ name, value: tag.Memes.map((m) => m.name).join(", ") }],
       },
     ],
+  });
+}
+
+async function all(interaction: CommandInteraction) {
+  const tags = await Tag.findAll();
+  return await interaction.reply({
+    content: tags.map((t) => t.name).join(", "),
+    ephemeral: true,
   });
 }
 
