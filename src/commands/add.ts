@@ -148,7 +148,7 @@ async function runButton(interaction: ButtonInteraction) {
   if (interaction.customId === "save") {
     const meme = memes.get(interaction.user.id);
     const id = uuidv4();
-    const file = `./audio/${id}.webm`;
+    const file = `audio/${id}.webm`;
     await fs.promises.copyFile(normalizedFile(interaction), file);
     meme.id = id;
     await meme?.save();
@@ -156,6 +156,7 @@ async function runButton(interaction: ButtonInteraction) {
     await meme.createCommand({ name });
     const stream = waveform(file);
     await upload(`waveforms/${id}.png`, stream.stdout);
+    await upload(file, fs.createReadStream(file));
     await interaction.update({ content: "Saved!", components: [] });
     const author = (interaction.member as GuildMember).displayName;
     await interaction.channel.send({
