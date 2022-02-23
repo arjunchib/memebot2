@@ -1,6 +1,6 @@
 import { AutocompleteInteraction } from "discord.js";
 import { Op } from "sequelize";
-import { Command, Tag } from "./models";
+import { Command, Meme, Tag } from "./models";
 
 export async function autocompleteCommands(
   interaction: AutocompleteInteraction
@@ -10,6 +10,8 @@ export async function autocompleteCommands(
     where: { name: { [Op.startsWith]: value } },
     limit: 25,
     attributes: ["name"],
+    include: [{ model: Meme, attributes: ["playCount"] }],
+    order: [[Command.associations.Meme, "playCount", "DESC"]],
   });
   await interaction.respond(
     commands.map((c) => ({ name: c.name, value: c.name }))
