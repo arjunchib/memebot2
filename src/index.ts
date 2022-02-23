@@ -1,4 +1,4 @@
-import { Client, Intents, Message, MessageAttachment } from "discord.js";
+import { Client, Intents, Message } from "discord.js";
 import { token, primaryGuildId } from "../config.js";
 import * as commands from "./commands";
 import fs from "fs-extra";
@@ -24,7 +24,7 @@ client.once("ready", async () => {
     })
   );
   const primaryGuild = await client.guilds.fetch(primaryGuildId);
-  primaryGuild.commands.set(commandData);
+  await primaryGuild.commands.set(commandData);
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -42,3 +42,20 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.login(token);
+
+process.on("SIGINT", async () => {
+  await cleanup();
+  process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+  await cleanup();
+  process.exit(0);
+});
+
+async function cleanup() {
+  if (process.env.NODE_ENV !== "production" && client.isReady()) {
+    const primaryGuild = await client.guilds.fetch(primaryGuildId);
+    await primaryGuild.commands.set([]);
+  }
+}
