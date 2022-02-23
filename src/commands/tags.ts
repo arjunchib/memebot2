@@ -5,8 +5,7 @@ import {
   Interaction,
 } from "discord.js";
 import { Meme, Command, Tag } from "../models";
-import { autocompleteCommands } from "../autocomplete";
-import { Op } from "sequelize";
+import { autocompleteCommands, autocompleteTags } from "../autocomplete";
 import { CommandError, validateName } from "../util";
 
 const options = [
@@ -161,16 +160,6 @@ async function all(interaction: CommandInteraction) {
     content: tags.map((t) => t.name).join(", "),
     ephemeral: true,
   });
-}
-
-async function autocompleteTags(interaction: AutocompleteInteraction) {
-  const value = interaction.options.getFocused().toString();
-  const tags = await Tag.findAll({
-    where: { name: { [Op.startsWith]: value } },
-    limit: 25,
-    attributes: ["name"],
-  });
-  await interaction.respond(tags.map((t) => ({ name: t.name, value: t.name })));
 }
 
 async function autocompleteMemeTags(interaction: AutocompleteInteraction) {
