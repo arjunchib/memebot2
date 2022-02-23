@@ -31,8 +31,8 @@ export async function run(interaction: CommandInteraction) {
   if (getVoiceConnection(interaction.guildId)) {
     throw new CommandError("Sorry busy 💅");
   }
-  const tagName = interaction.options.getString("tag").trim();
   let meme: Meme;
+  const tagName = interaction.options.getString("tag")?.trim();
   if (tagName) {
     const tag = await Tag.findByPk(tagName, {
       include: {
