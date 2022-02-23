@@ -2,6 +2,7 @@ import { Client, Intents, Message } from "discord.js";
 import { token, primaryGuildId } from "../config.js";
 import * as commands from "./commands";
 import fs from "fs-extra";
+import { CommandError } from "./util.js";
 
 await Promise.all([fs.emptyDir(".temp"), fs.ensureDir("audio")]);
 
@@ -37,7 +38,14 @@ client.on("interactionCreate", async (interaction) => {
       }
     }
   } catch (e) {
-    console.error(e);
+    if (
+      e instanceof CommandError &&
+      (interaction.isApplicationCommand() || interaction.isMessageComponent())
+    ) {
+      await interaction.reply({ content: e.message, ephemeral: true });
+    } else {
+      console.error(e);
+    }
   }
 });
 

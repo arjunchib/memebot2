@@ -9,6 +9,7 @@ import { Command } from "../models/command";
 import { playStream } from "../play-stream";
 import { autocompleteCommands } from "../autocomplete";
 import { getVoiceConnection } from "@discordjs/voice";
+import { CommandError } from "../util";
 
 export const command: ApplicationCommandData = {
   name: "play",
@@ -34,24 +35,15 @@ export async function run(interaction: Interaction) {
 
 async function play(interaction: CommandInteraction) {
   if (!("voice" in interaction.member) || !interaction.member.voice.channel) {
-    return await interaction.reply({
-      content: "Must be connected to voice channel",
-      ephemeral: true,
-    });
+    throw new CommandError("Must be connected to voice channel");
   }
   if (getVoiceConnection(interaction.guildId)) {
-    return await interaction.reply({
-      content: "Sorry busy 💅",
-      ephemeral: true,
-    });
+    throw new CommandError("Sorry busy 💅");
   }
   const name = interaction.options.getString("meme");
   const command = await Command.findOne({ where: { name }, include: Meme });
   if (command == null) {
-    return await interaction.reply({
-      content: "Could not find a meme with that command!",
-      ephemeral: true,
-    });
+    throw new CommandError("Could not find a meme with that command!");
   }
   const meme = command.Meme;
   const stream = fs.createReadStream(`./audio/${meme.id}.webm`);

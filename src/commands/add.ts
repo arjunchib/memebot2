@@ -16,6 +16,7 @@ import { playStream } from "../play-stream.js";
 import { getVoiceConnection } from "@discordjs/voice";
 import { download, loudnorm, probe, waveform } from "../audio.js";
 import { upload } from "../storage.js";
+import { CommandError } from "../util.js";
 
 const memes = new Map<string, Meme>();
 
@@ -66,17 +67,11 @@ function rawFile(interaction: Interaction) {
 
 async function runCommand(interaction: CommandInteraction) {
   if (!("voice" in interaction.member) || !interaction.member.voice.channel) {
-    return await interaction.reply({
-      content: "Must be connected to voice channel",
-      ephemeral: true,
-    });
+    throw new CommandError("Must be connected to voice channel");
   }
 
   if (getVoiceConnection(interaction.guildId)) {
-    return await interaction.reply({
-      content: "Sorry busy 💅",
-      ephemeral: true,
-    });
+    throw new CommandError("Sorry busy 💅");
   }
 
   const url = interaction.options.getString("url");
@@ -85,10 +80,7 @@ async function runCommand(interaction: CommandInteraction) {
   const end = interaction.options.getString("end");
 
   if (await Meme.findOne({ where: { name } })) {
-    return await interaction.reply({
-      content: "A meme with this name already exists!",
-      ephemeral: true,
-    });
+    throw new CommandError("A meme with this name already exists!");
   }
 
   await interaction.deferReply({ ephemeral: true });

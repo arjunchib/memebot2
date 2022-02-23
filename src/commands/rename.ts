@@ -6,6 +6,7 @@ import {
 import { Meme } from "../models/meme";
 import { Command } from "../models/command";
 import { autocompleteCommands } from "../autocomplete";
+import { CommandError } from "../util";
 
 export const command: ApplicationCommandData = {
   name: "rename",
@@ -40,10 +41,7 @@ async function rename(interaction: CommandInteraction) {
   const newName = interaction.options.getString("name").trim();
 
   if (await Meme.findOne({ where: { name: newName } })) {
-    return await interaction.reply({
-      content: "A meme with this name already exists!",
-      ephemeral: true,
-    });
+    throw new CommandError("A meme with this name already exists!");
   }
 
   const command = await Command.findOne({ where: { name }, include: Meme });

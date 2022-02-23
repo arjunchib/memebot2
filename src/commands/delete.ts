@@ -9,6 +9,7 @@ import {
 import { Meme, Tag, Command } from "../models";
 import { autocompleteCommands } from "../autocomplete";
 import fs from "fs/promises";
+import { CommandError } from "../util";
 
 export const command: ApplicationCommandData = {
   name: "delete",
@@ -45,10 +46,7 @@ async function destroy(interaction: CommandInteraction) {
   });
 
   if (!command) {
-    return await interaction.reply({
-      content: "Cannot find meme by that name!",
-      ephemeral: true,
-    });
+    throw new CommandError("Cannot find meme by that name!");
   }
 
   memes.set(interaction.user.id, command.Meme);
