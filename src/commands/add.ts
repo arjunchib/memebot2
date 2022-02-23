@@ -14,7 +14,8 @@ import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { playStream } from "../play-stream.js";
 import { getVoiceConnection } from "@discordjs/voice";
-import { download, loudnorm, probe } from "../audio.js";
+import { download, loudnorm, probe, waveform } from "../audio.js";
+import { upload } from "../storage.js";
 
 const memes = new Map<string, Meme>();
 
@@ -147,14 +148,14 @@ async function runButton(interaction: ButtonInteraction) {
   if (interaction.customId === "save") {
     const meme = memes.get(interaction.user.id);
     const id = uuidv4();
-    await fs.promises.copyFile(
-      normalizedFile(interaction),
-      `./audio/${id}.webm`
-    );
+    const file = `./audio/${id}.webm`;
+    await fs.promises.copyFile(normalizedFile(interaction), file);
     meme.id = id;
     await meme?.save();
     const name = meme.name;
     await meme.createCommand({ name });
+    const stream = waveform(file);
+    await upload(`waveforms/${id}.png`, stream.stdout);
     await interaction.update({ content: "Saved!", components: [] });
     const author = (interaction.member as GuildMember).displayName;
     await interaction.channel.send({

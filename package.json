@@ -18,6 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.52.0",
+    "@aws-sdk/lib-storage": "^3.52.0",
     "@discordjs/opus": "^0.7.0",
     "@discordjs/voice": "^0.8.0",
     "@ffmpeg/core": "^0.10.0",

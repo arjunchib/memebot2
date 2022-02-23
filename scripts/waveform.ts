@@ -41,6 +41,7 @@ await Promise.allSettled(
       ACL: "public-read",
       ContentType: "image/png",
     });
-    return client.send(command);
+    await client.send(command);
+    console.log(m.id);
   })
 );

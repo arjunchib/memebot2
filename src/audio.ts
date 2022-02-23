@@ -1,22 +1,22 @@
 import { spawn } from "child_process";
 
-async function run(command: string, ...args: string[]) {
-  const child = spawn(command, args);
-
-  let output = "";
-
-  child.stderr.on("data", (data) => {
-    output += data.toString();
-  });
-
-  await new Promise<void>((resolve, reject) => {
-    child.on("exit", (code) => {
-      if (!code) resolve();
-      else reject(new Error(`Failed while running ${command}`));
-    });
-  });
-
-  return output;
+export function waveform(file: string) {
+  const child = spawn("ffmpeg", [
+    "-hide_banner",
+    "-y",
+    "-i",
+    file,
+    "-filter_complex",
+    "compand,showwavespic=s=512x128:colors=white",
+    "-frames:v",
+    "1",
+    "-c:v",
+    "png",
+    "-f",
+    "image2",
+    "-",
+  ]);
+  return child;
 }
 
 export async function ffmpeg(...args: string[]): Promise<string> {
