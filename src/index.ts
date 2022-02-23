@@ -39,10 +39,18 @@ client.on("interactionCreate", async (interaction) => {
     }
   } catch (e) {
     if (
-      e instanceof CommandError &&
-      (interaction.isApplicationCommand() || interaction.isMessageComponent())
+      interaction.isApplicationCommand() ||
+      interaction.isMessageComponent()
     ) {
-      await interaction.reply({ content: e.message, ephemeral: true });
+      if (e instanceof CommandError) {
+        await interaction.reply({ content: e.message, ephemeral: true });
+      } else {
+        await interaction.reply({
+          content: "Something went wrong!",
+          ephemeral: true,
+        });
+        console.error(e);
+      }
     } else {
       console.error(e);
     }

@@ -1,5 +1,5 @@
 export function validateName(name: string): boolean {
-  return /^[a-zA-Z\.]*$/.test(name);
+  return /^[a-zA-Z0-9\.]*$/.test(name);
 }
 
 export class CommandError extends Error {

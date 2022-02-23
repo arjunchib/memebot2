@@ -39,12 +39,16 @@ export async function run(interaction: Interaction) {
 async function rename(interaction: CommandInteraction) {
   const name = interaction.options.getString("meme");
   const newName = interaction.options.getString("name").trim();
+  const command = await Command.findOne({ where: { name }, include: Meme });
+
+  if (!command) {
+    throw new CommandError("Could not find meme by that name!");
+  }
 
   if (await Meme.findOne({ where: { name: newName } })) {
     throw new CommandError("A meme with this name already exists!");
   }
 
-  const command = await Command.findOne({ where: { name }, include: Meme });
   const meme = command.Meme;
   const oldName = meme.name;
   meme.name = newName;

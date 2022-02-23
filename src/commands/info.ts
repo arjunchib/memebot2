@@ -9,6 +9,7 @@ import { Command } from "../models/command";
 import { Tag } from "../models";
 import { autocompleteCommands } from "../autocomplete";
 import { s3Config } from "../../config";
+import { CommandError } from "../util";
 
 export const command: ApplicationCommandData = {
   name: "info",
@@ -41,10 +42,7 @@ async function info(interaction: CommandInteraction) {
   });
 
   if (!command) {
-    return await interaction.reply({
-      content: "Could not find meme by that name!",
-      ephemeral: true,
-    });
+    throw new CommandError("Could not find meme by that name!");
   }
 
   const meme = command.Meme;

@@ -16,7 +16,7 @@ import { playStream } from "../play-stream.js";
 import { getVoiceConnection } from "@discordjs/voice";
 import { download, loudnorm, probe, waveform } from "../audio.js";
 import { upload } from "../storage.js";
-import { CommandError } from "../util.js";
+import { CommandError, validateName } from "../util.js";
 
 const memes = new Map<string, Meme>();
 
@@ -78,6 +78,16 @@ async function runCommand(interaction: CommandInteraction) {
   const name = interaction.options.getString("name");
   const start = interaction.options.getString("start");
   const end = interaction.options.getString("end");
+
+  if (ytdl.validateURL(url)) {
+    throw new CommandError("Meme url must be a valid youtube URL!");
+  }
+
+  if (validateName(name)) {
+    throw new CommandError(
+      "Meme name may only contain alphanumeric characters or period!"
+    );
+  }
 
   if (await Meme.findOne({ where: { name } })) {
     throw new CommandError("A meme with this name already exists!");
