@@ -79,11 +79,11 @@ async function runCommand(interaction: CommandInteraction) {
   const start = interaction.options.getString("start");
   const end = interaction.options.getString("end");
 
-  if (ytdl.validateURL(url)) {
+  if (!ytdl.validateURL(url)) {
     throw new CommandError("Meme url must be a valid youtube URL!");
   }
 
-  if (validateName(name)) {
+  if (!validateName(name)) {
     throw new CommandError(
       "Meme name may only contain alphanumeric characters or period!"
     );
