@@ -3,8 +3,9 @@ import {
   ButtonInteraction,
   CommandInteraction,
   Interaction,
-  MessageActionRow,
-  MessageButton,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } from "discord.js";
 import { Meme, Tag, Command } from "../models";
 import { autocompleteCommands } from "../autocomplete";
@@ -38,6 +39,7 @@ export async function run(interaction: Interaction) {
 }
 
 async function destroy(interaction: CommandInteraction) {
+  if (!interaction.isChatInputCommand()) return;
   const name = interaction.options.getString("meme");
 
   const command = await Command.findOne({
@@ -51,15 +53,15 @@ async function destroy(interaction: CommandInteraction) {
 
   memes.set(interaction.user.id, command.Meme);
 
-  const row = new MessageActionRow().addComponents(
-    new MessageButton()
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
       .setCustomId("delete")
       .setLabel("Delete")
-      .setStyle("DANGER"),
-    new MessageButton()
+      .setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
       .setCustomId("skip")
       .setLabel("Skip")
-      .setStyle("SECONDARY")
+      .setStyle(ButtonStyle.Secondary)
   );
 
   await interaction.reply({

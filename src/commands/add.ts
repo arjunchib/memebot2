@@ -1,12 +1,12 @@
 import {
-  MessageActionRow,
+  ActionRowBuilder,
   ButtonInteraction,
-  BaseCommandInteraction,
-  MessageButton,
+  ButtonBuilder,
   CommandInteraction,
   ApplicationCommandData,
   Interaction,
   GuildMember,
+  ButtonStyle,
 } from "discord.js";
 import ytdl from "ytdl-core";
 import { Meme } from "../models/meme.js";
@@ -49,7 +49,7 @@ export const command: ApplicationCommandData = {
   ],
 };
 
-export async function run(interaction: BaseCommandInteraction) {
+export async function run(interaction: Interaction) {
   if (interaction.isCommand()) {
     await runCommand(interaction);
   } else if (interaction.isButton()) {
@@ -73,6 +73,8 @@ async function runCommand(interaction: CommandInteraction) {
   if (getVoiceConnection(interaction.guildId)) {
     throw new CommandError("Sorry busy 💅");
   }
+
+  if (!interaction.isChatInputCommand()) return;
 
   const url = interaction.options.getString("url");
   const name = interaction.options.getString("name");
@@ -129,15 +131,15 @@ async function runCommand(interaction: CommandInteraction) {
     })
   );
 
-  const row = new MessageActionRow().addComponents(
-    new MessageButton()
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
       .setCustomId("save")
       .setLabel("Save")
-      .setStyle("SUCCESS"),
-    new MessageButton()
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
       .setCustomId("skip")
       .setLabel("Skip")
-      .setStyle("SECONDARY")
+      .setStyle(ButtonStyle.Secondary)
   );
 
   await interaction.editReply({

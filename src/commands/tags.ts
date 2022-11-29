@@ -81,6 +81,7 @@ export async function run(interaction: Interaction) {
       }
     }
   } else if (interaction.isCommand()) {
+    if (!interaction.isChatInputCommand()) return;
     const sub = interaction.options.getSubcommand();
     if (sub === "list") {
       await list(interaction);
@@ -93,6 +94,7 @@ export async function run(interaction: Interaction) {
 }
 
 async function modify(interaction: CommandInteraction) {
+  if (!interaction.isChatInputCommand()) return;
   const sub = interaction.options.getSubcommand();
   const name = interaction.options.getString("meme");
   const tagInput = interaction.options.getString("tag");
@@ -137,6 +139,7 @@ async function modify(interaction: CommandInteraction) {
 }
 
 async function list(interaction: CommandInteraction) {
+  if (!interaction.isChatInputCommand()) return;
   const name = interaction.options.getString("name");
   const tag = await Tag.findByPk(name, {
     include: { model: Meme, attributes: ["name"] },

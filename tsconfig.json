@@ -3,6 +3,7 @@
     "module": "ESNext",
     "moduleResolution": "Node",
     "target": "ESNext",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true
   }
 }

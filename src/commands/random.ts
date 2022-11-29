@@ -1,4 +1,8 @@
-import { ApplicationCommandData, CommandInteraction } from "discord.js";
+import {
+  ApplicationCommandData,
+  ApplicationCommandOptionType,
+  CommandInteraction,
+} from "discord.js";
 import fs from "fs";
 import { Meme } from "../models/meme";
 import { sequelize } from "../db";
@@ -15,7 +19,7 @@ export const command: ApplicationCommandData = {
     {
       name: "tag",
       description: "Limit to memes within a tag",
-      type: "STRING",
+      type: ApplicationCommandOptionType.String,
       autocomplete: true,
     },
   ],
@@ -31,6 +35,7 @@ export async function run(interaction: CommandInteraction) {
   if (getVoiceConnection(interaction.guildId)) {
     throw new CommandError("Sorry busy 💅");
   }
+  if (!interaction.isChatInputCommand()) return;
   let meme: Meme;
   const tagName = interaction.options.getString("tag")?.trim();
   if (tagName) {

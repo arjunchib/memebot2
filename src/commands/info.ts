@@ -2,7 +2,7 @@ import {
   ApplicationCommandData,
   CommandInteraction,
   Interaction,
-  MessageEmbed,
+  EmbedBuilder,
 } from "discord.js";
 import { Meme } from "../models/meme";
 import { Command } from "../models/command";
@@ -34,6 +34,7 @@ export async function run(interaction: Interaction) {
 }
 
 async function info(interaction: CommandInteraction) {
+  if (!interaction.isChatInputCommand()) return;
   const name = interaction.options.getString("meme");
 
   const command = await Command.findOne({
@@ -46,7 +47,7 @@ async function info(interaction: CommandInteraction) {
   }
 
   const meme = command.Meme;
-  const embed = new MessageEmbed()
+  const embed = new EmbedBuilder()
     .setTitle(meme.name)
     .setImage(
       `https://ewr1.vultrobjects.com/${s3Config.bucket}/waveforms/${meme.id}.png`

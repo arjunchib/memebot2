@@ -71,6 +71,7 @@ export async function run(interaction: Interaction) {
 }
 
 async function modify(interaction: CommandInteraction) {
+  if (!interaction.isChatInputCommand()) return;
   const sub = interaction.options.getSubcommand();
   const name = interaction.options.getString("meme");
   const nameInput = interaction.options.getString("name");

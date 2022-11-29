@@ -37,6 +37,7 @@ export async function run(interaction: Interaction) {
 }
 
 async function rename(interaction: CommandInteraction) {
+  if (!interaction.isChatInputCommand()) return;
   const name = interaction.options.getString("meme");
   const newName = interaction.options.getString("name").trim();
   const command = await Command.findOne({ where: { name }, include: Meme });

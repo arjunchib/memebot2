@@ -40,6 +40,7 @@ async function play(interaction: CommandInteraction) {
   if (getVoiceConnection(interaction.guildId)) {
     throw new CommandError("Sorry busy 💅");
   }
+  if (!interaction.isChatInputCommand()) return;
   const name = interaction.options.getString("meme");
   const command = await Command.findOne({ where: { name }, include: Meme });
   if (command == null) {
