@@ -5,6 +5,7 @@ import {
   PermissionFlagsBits,
   OAuth2Scopes,
   InteractionType,
+  Interaction,
 } from "discord.js";
 import { token, primaryGuildId } from "../config.js";
 import * as commands from "./commands";
@@ -53,12 +54,9 @@ client.on("interactionCreate", async (interaction) => {
       interaction.isMessageComponent()
     ) {
       if (e instanceof CommandError) {
-        await interaction.reply({ content: e.message, ephemeral: true });
+        await replyError(interaction, e.message);
       } else {
-        await interaction.reply({
-          content: "Something went wrong!",
-          ephemeral: true,
-        });
+        await replyError(interaction, "Something went wrong!", false);
         console.error(e);
       }
     } else {
@@ -66,6 +64,26 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 });
+
+async function replyError(
+  interaction: Interaction,
+  content: string,
+  log = true
+) {
+  if (
+    interaction.type !== InteractionType.ApplicationCommand &&
+    !interaction.isMessageComponent()
+  )
+    return;
+  if (!interaction.isRepliable()) {
+    return console.error(content);
+  }
+  if (interaction.deferred || interaction.replied) {
+    await interaction.editReply({ content: content });
+  } else {
+    await interaction.reply({ content: content, ephemeral: true });
+  }
+}
 
 client.login(token);
 
