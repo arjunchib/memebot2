@@ -6,3 +6,4 @@ export * as tags from "./tags";
 export * as rename from "./rename";
 export * as info from "./info";
 export * as delete from "./delete";
+export * as list from "./list";
