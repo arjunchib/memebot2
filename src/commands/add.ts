@@ -17,6 +17,7 @@ import { getVoiceConnection } from "@discordjs/voice";
 import { download, loudnorm, probe, waveform } from "../audio.js";
 import { upload } from "../storage.js";
 import { CommandError, validateName } from "../util.js";
+import { cookie } from "../../config.js";
 
 const memes = new Map<string, Meme>();
 
@@ -97,7 +98,13 @@ async function runCommand(interaction: CommandInteraction) {
 
   await interaction.deferReply({ ephemeral: true });
 
-  let info = await ytdl.getInfo(url);
+  let info = await ytdl.getInfo(url, {
+    requestOptions: {
+      headers: {
+        cookie: cookie,
+      },
+    },
+  });
   const format = ytdl.chooseFormat(info.formats, {
     quality: "highestaudio",
     filter: (format) => format.codecs === "opus" && format.container === "webm",
