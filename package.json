@@ -35,7 +35,7 @@
     "sqlite3": "^5.1.2",
     "umzug": "^3.2.1",
     "uuid": "^9.0.0",
-    "ytdl-core": "git+ssh://git@github.com:khlevon/node-ytdl-core.git#v4.11.4-patch.1"
+    "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
